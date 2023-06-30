@@ -88,10 +88,10 @@ def plot_tensor(tensor, rgbprofile, ax=None):
         ax.imshow(rgb_image)
         ax.axis('off')
 
-def plot_tensor_sbs(tensor, s3_rgbprofile=RGBProfile.S3, title=None):
+def plot_tensor_sbs(tensor, tilesize, s3_rgbprofile=RGBProfile.S3, title=None):
     from matplotlib import pyplot as plt
 
-    s2_tensor, s3_tensor = parse_tfrecord(tensor)
+    s2_tensor, s3_tensor = parse_tfrecord(tensor, tilesize)
     
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     if title is not None:
