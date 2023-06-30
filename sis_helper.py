@@ -123,12 +123,12 @@ def save_tfrecord(raw_tiff, filepath):
     writer.close()
     
 
-def parse_tfrecord(tfrecord):
+def parse_tfrecord(tfrecord, tilesize):
     import tensorflow as tf
 
     record_description = {
-        'raw_s2': tf.io.FixedLenFeature([960, 960, 3], tf.float32),
-        'raw_s3': tf.io.FixedLenFeature([960, 960, 21], tf.float32),
+        'raw_s2': tf.io.FixedLenFeature([tilesize, tilesize, 3], tf.float32),
+        'raw_s3': tf.io.FixedLenFeature([tilesize, tilesize, 21], tf.float32),
     }
     sample = tf.io.parse_single_example(tfrecord, record_description)
     raw_s2 = sample['raw_s2']
