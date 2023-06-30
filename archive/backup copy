@@ -1,0 +1,32 @@
+# import snappy
+# from snappy import GPF
+# from snappy import ProductIO
+
+import os
+import glob
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+import tensorflow as tf
+
+import helper
+from helper import RGBProfile
+# from osgeo import gdal
+
+FILENAME='/home/cb/sis/data/collocated/snappy_test.tif'
+
+raw_tiff = rasterio.open(os.path.join(FILENAME))
+
+red_band = helper.normalize_numpy(raw_tiff.read(5))
+green_band = helper.normalize_numpy(raw_tiff.read(4))
+blue_band = helper.normalize_numpy(raw_tiff.read(3))
+
+# Stack the bands to create the RGB image
+# rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
+rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
+
+# Display the RGB image
+plt.figure(figsize=(10,10))
+plt.imshow(rgb_image)
+plt.axis('off')
+plt.show()

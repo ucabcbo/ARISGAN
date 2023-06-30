@@ -1,0 +1,137 @@
+
+def normalize_numpy(array):
+    array_min, array_max = array.min(), array.max()
+    return (array - array_min) / (array_max - array_min)
+
+from enum import Enum
+
+class RGBProfile(Enum):
+    S2 = [3,2,1]
+    S3 = [17,6,3]
+    S3_TRISTIMULUS = [17,5,2]
+
+tiff_bandoffset = {RGBProfile.S2.name: 2,
+                   RGBProfile.S3.name: 5,
+                   RGBProfile.S3_TRISTIMULUS.name: 5}
+
+tensor_bandoffset = {RGBProfile.S2.name: -1,
+                     RGBProfile.S3.name: -1,
+                     RGBProfile.S3_TRISTIMULUS.name: -1}
+
+def plot_tiff(raw_tiff, rgbprofile, ax=None):
+
+    bands = rgbprofile.value
+    bands = [item + tiff_bandoffset[rgbprofile.name] for item in bands]
+
+    import numpy as np
+    from matplotlib import pyplot as plt
+
+    red_band = normalize_numpy(raw_tiff.read(bands[0]))
+    green_band = normalize_numpy(raw_tiff.read(bands[1]))
+    blue_band = normalize_numpy(raw_tiff.read(bands[2]))
+
+    # Stack the bands to create the RGB image
+    # rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
+    rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
+
+    # Display the RGB image
+    if ax is None:
+        plt.figure(figsize=(10,10))
+        plt.imshow(rgb_image)
+        plt.axis('off')
+        plt.show()
+    else:
+        ax.imshow(rgb_image)
+        ax.axis('off')
+
+def plot_tiff_sbs(raw_tiff, left_rgbprofile=RGBProfile.S2, right_rgbprofile=RGBProfile.S3, title=None):
+    from matplotlib import pyplot as plt
+
+    fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    if title is not None:
+        fig.suptitle(title)
+    plot_tiff(raw_tiff, left_rgbprofile, ax=ax[0])
+    plot_tiff(raw_tiff, right_rgbprofile, ax=ax[1])
+    ax[0].set_title(left_rgbprofile.name)
+    ax[1].set_title(right_rgbprofile.name)
+    plt.tight_layout()
+    plt.show()
+
+def plot_tensor(tensor, rgbprofile, ax=None):
+
+    # print(banddelta)
+    # print(type(rgbprofile))
+    # print(type(RGBProfile.S3))
+    bands = rgbprofile.value
+    bands = [item + tensor_bandoffset[rgbprofile.name] for item in bands]
+
+    import numpy as np
+    from matplotlib import pyplot as plt
+
+    nptensor = tensor.numpy()
+
+    red_band = normalize_numpy(nptensor[:,:,bands[0]])
+    green_band = normalize_numpy(nptensor[:,:,bands[1]])
+    blue_band = normalize_numpy(nptensor[:,:,bands[2]])
+
+    # Stack the bands to create the RGB image
+    # rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
+    rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
+
+    if ax is None:
+        # Display the RGB image
+        plt.figure(figsize=(10,10))
+        plt.imshow(rgb_image)
+        plt.axis('off')
+        plt.show()
+    else:
+        ax.imshow(rgb_image)
+        ax.axis('off')
+
+def plot_tensor_sbs(tensor, s3_rgbprofile=RGBProfile.S3, title=None):
+    from matplotlib import pyplot as plt
+
+    s2_tensor, s3_tensor = parse_tfrecord(tensor)
+    
+    fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    if title is not None:
+        fig.suptitle(title)
+    plot_tensor(s2_tensor, RGBProfile.S2, ax=ax[0])
+    plot_tensor(s3_tensor, s3_rgbprofile, ax=ax[1])
+    ax[0].set_title('Sentinel-2')
+    ax[1].set_title('Sentinel-3')
+    plt.tight_layout()
+    plt.show()
+
+def save_tfrecord(raw_tiff, filepath):
+    import numpy as np
+    import tensorflow as tf
+
+    raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
+    #TODO: adjust if tiff structure changes
+    raw_s2 = raw_np[:,:,2:5]
+    raw_s3 = raw_np[:,:,5:26]
+
+    writer = tf.io.TFRecordWriter(filepath)
+
+    sample = tf.train.Example(features=tf.train.Features(feature={
+        'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
+        'raw_s3': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s3.flatten())),
+    }))
+
+    writer.write(sample.SerializeToString())
+    writer.close()
+    
+
+def parse_tfrecord(tfrecord):
+    import tensorflow as tf
+
+    record_description = {
+        'raw_s2': tf.io.FixedLenFeature([960, 960, 3], tf.float32),
+        'raw_s3': tf.io.FixedLenFeature([960, 960, 21], tf.float32),
+    }
+    sample = tf.io.parse_single_example(tfrecord, record_description)
+    raw_s2 = sample['raw_s2']
+    raw_s3 = sample['raw_s3']
+    return raw_s2, raw_s3
+
