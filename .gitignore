@@ -1,4 +1,5 @@
 data/
+logs_5e/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
