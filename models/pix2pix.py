@@ -1,12 +1,34 @@
 import tensorflow as tf
+import datetime
+import os
 
 class Model:
     
-    def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS):
+    def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT):
+        self.name = 'pix2pix'
         self.IMG_WIDTH = IMG_WIDTH
         self.IMG_HEIGHT = IMG_HEIGHT
         self.INPUT_CHANNELS = INPUT_CHANNELS
         self.OUTPUT_CHANNELS = OUTPUT_CHANNELS
+        self.LAMBDA = LAMBDA
+
+        self.generator = Model.Generator(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS)
+        self.discriminator = Model.Discriminator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS)
+
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        
+        self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+
+        self.summary_writer = tf.summary.create_file_writer(PATH_LOGS + f'{self.name}_fit/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
+
+        self.checkpoint_prefix = os.path.join(PATH_CKPT, f'{self.name}_ckpt')
+        self.checkpoint = tf.train.Checkpoint(
+            generator_optimizer=self.generator_optimizer,
+            discriminator_optimizer=self.discriminator_optimizer,
+            generator=self.generator,
+            discriminator=self.discriminator)
+
 
     def downsample(filters, size, apply_batchnorm=True):
         initializer = tf.random_normal_initializer(0., 0.02)
@@ -26,6 +48,7 @@ class Model:
         result.add(tf.keras.layers.LeakyReLU())
         
         return result
+
 
     def upsample(filters, size, apply_dropout=False):
         initializer = tf.random_normal_initializer(0., 0.02)
@@ -48,9 +71,10 @@ class Model:
         
         return result
 
-    def Generator(self):
+
+    def Generator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS):
         
-        inputs = tf.keras.layers.Input(shape=[self.IMG_HEIGHT, self.IMG_WIDTH, self.INPUT_CHANNELS])
+        inputs = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS])
         
         down_stack = [
             Model.downsample(64, 4, apply_batchnorm=False),  # (batch_size, 128, 128, 64)
@@ -75,7 +99,7 @@ class Model:
 
         initializer = tf.random_normal_initializer(0., 0.02)
         last = tf.keras.layers.Conv2DTranspose(
-            self.OUTPUT_CHANNELS, 4,
+            OUTPUT_CHANNELS, 4,
             strides=2,
             padding='same',
             kernel_initializer=initializer,
@@ -101,11 +125,11 @@ class Model:
         return tf.keras.Model(inputs=inputs, outputs=x)
         
 
-    def Discriminator(self):
+    def Discriminator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS):
         initializer = tf.random_normal_initializer(0., 0.02)
 
-        inp = tf.keras.layers.Input(shape=[self.IMG_HEIGHT, self.IMG_WIDTH, self.INPUT_CHANNELS], name='input_image')
-        tar = tf.keras.layers.Input(shape=[self.IMG_HEIGHT, self.IMG_WIDTH, self.OUTPUT_CHANNELS], name='target_image')
+        inp = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS], name='input_image')
+        tar = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, OUTPUT_CHANNELS], name='target_image')
 
         x = tf.keras.layers.concatenate([inp, tar])  # (batch_size, 256, 256, channels*2)
 
@@ -131,3 +155,57 @@ class Model:
 
         return tf.keras.Model(inputs=[inp, tar], outputs=last)
     
+
+    def generator_loss(self, disc_generated_output, gen_output, target):
+        loss_object = self.loss_object
+        gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
+        l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
+        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
+        total_gen_loss = gan_loss + (self.LAMBDA * l1_loss)
+        return total_gen_loss, gan_loss, l1_loss, rmse_loss
+
+
+    def discriminator_loss(self, disc_real_output, disc_generated_output):
+        loss_object = self.loss_object
+        real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
+        generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
+        total_disc_loss = real_loss + generated_loss
+        return total_disc_loss
+
+
+    @tf.function
+    def train_step(self, input_image, target, step):
+        generator = self.generator
+        discriminator = self.discriminator
+        summary_writer = self.summary_writer
+
+        with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+            gen_output = generator(input_image, training=True)
+
+            disc_real_output = discriminator([input_image, target], training=True)
+            disc_generated_output = discriminator([input_image, gen_output], training=True)
+
+            gen_total_loss, gen_gan_loss, gen_l1_loss, gen_rmse_loss = self.generator_loss(disc_generated_output, gen_output, target)
+            disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
+
+        generator_gradients = gen_tape.gradient(gen_total_loss,
+                                                generator.trainable_variables)
+        discriminator_gradients = disc_tape.gradient(disc_loss,
+                                                    discriminator.trainable_variables)
+
+        self.generator_optimizer.apply_gradients(zip(generator_gradients,
+                                                generator.trainable_variables))
+        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients,
+                                                    discriminator.trainable_variables))
+
+        with summary_writer.as_default():
+            tf.summary.scalar('gen_total_loss', gen_total_loss, step=step//1000)
+            tf.summary.scalar('gen_gan_loss', gen_gan_loss, step=step//1000)
+            tf.summary.scalar('gen_l1_loss', gen_l1_loss, step=step//1000)
+            tf.summary.scalar('gen_rmse_loss', gen_rmse_loss, step=step//1000)
+            tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
+    
+
+    def save(self):
+        self.checkpoint.save(file_prefix=self.checkpoint_prefix)
+
