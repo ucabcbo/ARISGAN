@@ -45,7 +45,7 @@ import numpy as np
 import sis_helper as helper
 from sis_helper import RGBProfile as rgb
 
-from models import pix2pix
+from models import pix2pix, psgan
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -107,7 +107,8 @@ BATCH_SIZE = 10
 LAMBDA = 100
 
 
-model = pix2pix.Model(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT)
+# model = pix2pix.Model(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT)
+model = psgan.Model(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT)
 
 dataset_reader = Reader(TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BUFFER_SIZE, BATCH_SIZE)
 train_dataset = dataset_reader.train_dataset
