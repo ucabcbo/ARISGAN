@@ -1,3 +1,38 @@
+### Arguments
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", required=True, help="tbd")
+parser.add_argument("--tilesize", type=int, help="tbd", default=256)
+parser.add_argument("--img_width", type=int, help="tbd", default=256)
+parser.add_argument("--img_height", type=int, help="tbd", default=256)
+parser.add_argument("--batch_size", type=int, help="tbd", default=16)
+parser.add_argument("--lmbda", type=int, help="tbd", default=100)
+parser.add_argument("--progress_freq", type=int, default=1000, help="display progress every n steps")
+parser.add_argument("--save_freq", type=int, default=5000, help="save model every n steps")
+parser.add_argument("--suffix", default=None, help="suffix for output paths")
+
+# parser.add_argument("--lr", type=float, default=0.0001, help="initial learning rate for adam")
+# parser.add_argument("--beta1", type=float, default=0.5, help="momentum term of adam")
+# parser.add_argument("--l1_weight", type=float, default=100.0, help="weight on L1 term for generator gradient")
+# parser.add_argument("--gan_weight", type=float, default=1.0, help="weight on GAN term for generator gradient")
+
+# parser.add_argument("--ndf", type=int, default=32, help="number of generator filters in first conv layer")
+# parser.add_argument("--train_count", type=int, default=64000, help="number of training data")
+# parser.add_argument("--test_count", type=int, default=384, help="number of test data")
+# parser.add_argument("--gpus", help="gpus to run", default="0")
+# parser.add_argument("--blk", type=int, default=32, help="size of sample lr image")
+
+a = parser.parse_args()
+print(f'Arguments read: {a}')
+
+assert a.model in ['psgan',
+                   'pix2pix']
+### End arguments
+
+import os
+pid = os.getpid()
+print("PID:", pid)
+
 with open('env.txt') as f:
     ENVIRONMENT = f.readlines()[0][:-1]
 print(f'running on environment: "{ENVIRONMENT}"')
@@ -8,9 +43,7 @@ assert ENVIRONMENT in ['blaze',
 
 
 if ENVIRONMENT == 'blaze':
-
     import subprocess
-    import os
 
     command = 'source /usr/local/cuda/CUDA_VISIBILITY.csh'
     process = subprocess.Popen(command, shell=True, executable="/bin/csh", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -18,7 +51,6 @@ if ENVIRONMENT == 'blaze':
 
     os.environ['CUDA_VISIBLE_DEVICES'] = stdout.decode()[-2]
     # os.environ['CUDA_HOME'] = '/opt/cuda/cuda-10.0'
-
     print(stdout.decode())
 
     command = 'source /server/opt/cuda/enable_cuda_11.0'
@@ -28,22 +60,17 @@ if ENVIRONMENT == 'blaze':
     command = 'echo $CUDA_VISIBLE_DEVICES'
     process = subprocess.Popen(command, shell=True, executable="/bin/csh", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
-
+    print(command)
     print(stdout.decode())
+
 
 import tensorflow as tf
 
-import os
 import glob
 import time
 import datetime
-import random
-
-from matplotlib import pyplot as plt
-import numpy as np
 
 import sis_helper as helper
-from sis_helper import RGBProfile as rgb
 
 from models import pix2pix, psgan
 from dataset.reader import Reader
@@ -67,50 +94,46 @@ with tf.compat.v1.Session() as sess:
         print('TensorFlow is using GPU:', device_name)
     else:
         print('TensorFlow is not using GPU')
-
 ### End GPU checks
 
 
-TILESIZE = 256
-IMG_WIDTH = 256
-IMG_HEIGHT = 256
-
-# TILESIZE = 960
-# IMG_WIDTH = 1024
-# IMG_HEIGHT = 1024
-
 INPUT_CHANNELS = 21
 OUTPUT_CHANNELS = 3
+STARTTIME = datetime.datetime.now().strftime('%m%d-%H%M')
 
 if ENVIRONMENT == 'blaze':
-    PATH_PREFIX = '/cs/student/msc/aisd/2022/cboehm/projects/li1_data/'
+    path_prefix = '/cs/student/msc/aisd/2022/cboehm/projects/li1_data/'
 elif ENVIRONMENT == 'colab':
-    PATH_PREFIX = f'/content/drive/MyDrive/sis2/data/'
+    path_prefix = f'/content/drive/MyDrive/sis2/data/'
 elif ENVIRONMENT == 'local':
-    PATH_PREFIX = f'/Users/christianboehm/projects/sis2/data/'
+    path_prefix = f'/Users/christianboehm/projects/sis2/data/'
 elif ENVIRONMENT == 'cpom':
-    PATH_PREFIX = f'/home/cb/sis2/data/'
+    path_prefix = f'/home/cb/sis2/data/'
 else:
-    PATH_PREFIX = f'~/projects/sis2/data'
+    path_prefix = f'~/projects/sis2/data'
 
-PATH_TRAIN = os.path.join(PATH_PREFIX, f'tfrecords{TILESIZE}/')
-PATH_VAL = os.path.join(PATH_PREFIX, f'tfrecords{TILESIZE}/')
-PATH_LOGS = os.path.join(PATH_PREFIX, 'logs/')
-PATH_CKPT = os.path.join(PATH_PREFIX, 'checkpoints/')
-PATH_IMGS = os.path.join(PATH_PREFIX, 'images/')
+path_train = os.path.join(path_prefix, f'tfrecords{a.tilesize}/')
+path_val = os.path.join(path_prefix, f'tfrecords{a.tilesize}/')
+
+path_subfolder = f'{STARTTIME}_{a.model}_{a.batch_size}x{a.tilesize}'
+if a.suffix is not None:
+    path_subfolder += f'_{a.suffix}'
+path_log = os.path.join(path_prefix, f'logs/{path_subfolder}/')
+path_ckpt = os.path.join(path_prefix, f'checkpoints/{path_subfolder}/')
+path_imgs = os.path.join(path_prefix, f'images/{path_subfolder}/')
+os.makedirs(path_log, exist_ok=True)
+os.makedirs(path_ckpt, exist_ok=True)
+os.makedirs(path_imgs, exist_ok=True)
 
 # The training set consist of n images
-BUFFER_SIZE = number_of_files = len(glob.glob(os.path.join(PATH_TRAIN, '*')))
-# BUFFER_SIZE = 1077
-# The batch size of 1 produced better results for the U-Net in the original pix2pix experiment
-BATCH_SIZE = 10
-LAMBDA = 100
+BUFFER_SIZE = len(glob.glob(os.path.join(path_train, '*')))
 
+if a.model == 'pix2pix':
+    model = pix2pix.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+elif a.model == 'psgan':
+    model = psgan.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 
-# model = pix2pix.Model(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT)
-model = psgan.Model(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT)
-
-dataset_reader = Reader(TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BUFFER_SIZE, BATCH_SIZE)
+dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, BUFFER_SIZE, a.batch_size)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
@@ -119,21 +142,20 @@ discriminator = model.discriminator
 
 def fit(train_ds, test_ds, steps):
     # example_target, example_input = next(iter(test_ds.take(1)))
-    starttimestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     start = time.time()
     
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if (step) % 1000 == 0:
+        if (step) % a.progress_freq == 0:
             # display.clear_output(wait=True)
             
             if step != 0:
-                print(f'Time taken for 1000 steps: {time.time()-start:.2f} sec\n')
+                print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
 
             for example_target, example_input in test_dataset.take(1):
-                helper.generate_images(generator, example_input, example_target, showimg=True, PATH_IMGS=PATH_IMGS, savemodel=model.name, starttimestamp=starttimestamp, iteration=step)
+                helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
-            print(f"Step: {step // 1000}k")
+            print(f"Step: {step}")
 
         model.train_step(input_image, target, step)
 
@@ -142,7 +164,7 @@ def fit(train_ds, test_ds, steps):
             print('.', end='', flush=True)
 
         # Save (checkpoint) the model every 5k steps
-        if (step + 1) % 5000 == 0:
+        if (step + 1) % a.save_freq == 0:
             model.save()
 
 fit(train_dataset, test_dataset, steps=40000)
