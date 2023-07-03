@@ -167,5 +167,7 @@ def generate_images(model, example_input, example_target, num_images=5, showimg=
     plt.tight_layout()
     if PATH_IMGS is not None:
         plt.savefig(os.path.join(PATH_IMGS, f'{savemodel}_{starttimestamp}_{iteration:05d}.png'))
+        plt.close()
     if showimg:
         plt.show()
+    
