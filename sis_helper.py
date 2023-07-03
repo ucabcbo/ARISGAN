@@ -135,3 +135,37 @@ def parse_tfrecord(tfrecord, tilesize):
     raw_s3 = sample['raw_s3']
     return raw_s2, raw_s3
 
+
+def generate_images(model, example_input, example_target, num_images=5, showimg=True, PATH_IMGS=None, savemodel=None, starttimestamp=None, iteration=None):
+
+    import os
+    from matplotlib import pyplot as plt
+
+    #TODO: training True or False!?
+    prediction = model(example_input, training=False)
+
+    num_images = min(num_images, len(example_input))
+
+    fig, ax = plt.subplots(num_images, 3, figsize=(15,5*num_images))
+
+    for i in range(num_images):
+        display_list = [example_input[i], example_target[i], prediction[i]]
+        tempax = ax[i] if num_images > 1 else ax
+
+        plot_tensor(display_list[0], RGBProfile.S3, ax=tempax[0])
+        tempax[0].set_title('Input Image')
+        tempax[0].axis('off')
+
+        plot_tensor(display_list[1], RGBProfile.S2, ax=tempax[1])
+        tempax[1].set_title('Ground Truth')
+        tempax[1].axis('off')
+
+        plot_tensor(display_list[2], RGBProfile.S2, ax=tempax[2])
+        tempax[2].set_title('Predicted Image')
+        tempax[2].axis('off')
+
+    plt.tight_layout()
+    if PATH_IMGS is not None:
+        plt.savefig(os.path.join(PATH_IMGS, f'{savemodel}_{starttimestamp}_{iteration:05d}.png'))
+    if showimg:
+        plt.show()
