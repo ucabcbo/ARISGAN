@@ -5,7 +5,9 @@ import os
 class Model:
     
     def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT):
-        self.name = 'pix2pix'
+
+        self.name = 'psgan'
+
         self.IMG_WIDTH = IMG_WIDTH
         self.IMG_HEIGHT = IMG_HEIGHT
         self.INPUT_CHANNELS = INPUT_CHANNELS
@@ -14,8 +16,6 @@ class Model:
 
         self.generator = Model.Generator(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS)
         self.discriminator = Model.Discriminator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS)
-
-        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=False)
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -164,20 +164,20 @@ class Model:
 
 
     def generator_loss(self, disc_generated_output, gen_output, target):
-        loss_object = self.loss_object
-        gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
-        l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
-        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
-        total_gen_loss = gan_loss + (self.LAMBDA * l1_loss)
-        return total_gen_loss, gan_loss, l1_loss, rmse_loss
+        EPS = 1e-8
+        gen_loss_GAN = tf.reduce_mean(-tf.math.log(disc_generated_output + EPS))
+        gen_loss_L1 = tf.reduce_mean(tf.abs(target - gen_output))
+        #TODO: check weightings
+        gen_loss = gen_loss_GAN * 1.0 + gen_loss_L1 * 100.0
+        
+        return gen_loss_GAN, gen_loss_L1, gen_loss
 
 
     def discriminator_loss(self, disc_real_output, disc_generated_output):
-        loss_object = self.loss_object
-        real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
-        generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
-        total_disc_loss = real_loss + generated_loss
-        return total_disc_loss
+        EPS = 1e-8
+        discrim_loss = tf.reduce_mean(-(tf.math.log(disc_real_output + EPS) + tf.math.log(1 - disc_generated_output + EPS)))
+
+        return discrim_loss
 
 
     @tf.function
@@ -192,12 +192,12 @@ class Model:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            gen_total_loss, gen_gan_loss, gen_l1_loss, gen_rmse_loss = self.generator_loss(disc_generated_output, gen_output, target)
-            disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
+            gen_loss_GAN, gen_loss_L1, gen_loss = self.generator_loss(disc_generated_output, gen_output, target)
+            discrim_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
 
-        generator_gradients = gen_tape.gradient(gen_total_loss,
+        generator_gradients = gen_tape.gradient(gen_loss_GAN,
                                                 generator.trainable_variables)
-        discriminator_gradients = disc_tape.gradient(disc_loss,
+        discriminator_gradients = disc_tape.gradient(discrim_loss,
                                                     discriminator.trainable_variables)
 
         self.generator_optimizer.apply_gradients(zip(generator_gradients,
@@ -206,11 +206,10 @@ class Model:
                                                     discriminator.trainable_variables))
 
         with summary_writer.as_default():
-            tf.summary.scalar('gen_total_loss', gen_total_loss, step=step//1000)
-            tf.summary.scalar('gen_gan_loss', gen_gan_loss, step=step//1000)
-            tf.summary.scalar('gen_l1_loss', gen_l1_loss, step=step//1000)
-            tf.summary.scalar('gen_rmse_loss', gen_rmse_loss, step=step//1000)
-            tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
+            tf.summary.scalar('gen_loss_GAN', gen_loss_GAN, step=step//1000)
+            tf.summary.scalar('gen_loss_L1', gen_loss_L1, step=step//1000)
+            tf.summary.scalar('gen_loss', gen_loss, step=step//1000)
+            tf.summary.scalar('disc_loss', discrim_loss, step=step//1000)
     
 
     def save(self):
