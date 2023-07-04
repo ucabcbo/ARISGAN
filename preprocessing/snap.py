@@ -4,9 +4,10 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
+from shapely.geometry import Polygon
 
 import snappy
-from snappy import ProductIO
+from snappy import ProductIO, PixelPos
 from snappy import jpy
 HashMap = snappy.jpy.get_type('java.util.HashMap')
 
@@ -194,3 +195,31 @@ def s2_metadata_cloud_percentage(s2_product):
                       .getAttribute('CLOUDY_PIXEL_PERCENTAGE')
                       .getData().getElemString())
     return cloud_pct
+
+
+def check_overlap(product_a, product_b):
+    gc_a = product_a.getSceneGeoCoding()
+    gc_b = product_b.getSceneGeoCoding()
+
+    min_a = gc_a.getGeoPos(PixelPos(0, 0), None)
+    max_a = gc_a.getGeoPos(PixelPos(product_a.getSceneRasterWidth(), product_a.getSceneRasterHeight()), None)
+
+    min_b = gc_b.getGeoPos(PixelPos(0, 0), None)
+    max_b = gc_b.getGeoPos(PixelPos(product_b.getSceneRasterWidth(), product_b.getSceneRasterHeight()), None)
+
+    bbox_a = [[min_a.getLat(), min_a.getLon()], [max_a.getLat(), min_a.getLon()],
+                [max_a.getLat(), max_a.getLon()], [min_a.getLat(), max_a.getLon()]]
+    
+    bbox_b = [[min_b.getLat(), min_b.getLon()], [max_b.getLat(), min_b.getLon()],
+                [max_b.getLat(), max_b.getLon()], [min_b.getLat(), max_b.getLon()]]
+    
+    polygon_a = Polygon(bbox_a)
+    polygon_b = Polygon(bbox_b)
+    
+    # intersect = polygon_1.intersection(
+    #     polygon_2).area / polygon_1.union(polygon_2).area
+
+    intersect = polygon_a.intersection(
+        polygon_b).area / polygon_a.area
+
+    return intersect
