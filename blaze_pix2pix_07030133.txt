@@ -1,0 +1,368 @@
+2023-07-03 01:33:32.466124: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:37.230216: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2023-07-03 01:33:37.231699: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2023-07-03 01:33:37.268154: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:02:00.0 name: NVIDIA GeForce GTX TITAN X computeCapability: 5.2
+coreClock: 1.076GHz coreCount: 24 deviceMemorySize: 11.93GiB deviceMemoryBandwidth: 313.37GiB/s
+2023-07-03 01:33:37.268219: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:37.272587: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:33:37.272649: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2023-07-03 01:33:37.275419: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2023-07-03 01:33:37.275841: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2023-07-03 01:33:37.279102: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2023-07-03 01:33:37.280053: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2023-07-03 01:33:37.280269: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:33:37.281746: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2023-07-03 01:33:37.281793: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:37.998000: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2023-07-03 01:33:37.998067: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2023-07-03 01:33:37.998082: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2023-07-03 01:33:37.999419: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/device:GPU:0 with 11278 MB memory) -> physical GPU (device: 0, name: NVIDIA GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+2023-07-03 01:33:38.000104: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2023-07-03 01:33:38.000508: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:02:00.0 name: NVIDIA GeForce GTX TITAN X computeCapability: 5.2
+coreClock: 1.076GHz coreCount: 24 deviceMemorySize: 11.93GiB deviceMemoryBandwidth: 313.37GiB/s
+2023-07-03 01:33:38.000733: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:38.000777: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:33:38.000797: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2023-07-03 01:33:38.000814: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2023-07-03 01:33:38.001309: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2023-07-03 01:33:38.001342: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2023-07-03 01:33:38.001362: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2023-07-03 01:33:38.001829: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:33:38.002541: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2023-07-03 01:33:38.003585: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2023-07-03 01:33:38.003993: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:02:00.0 name: NVIDIA GeForce GTX TITAN X computeCapability: 5.2
+coreClock: 1.076GHz coreCount: 24 deviceMemorySize: 11.93GiB deviceMemoryBandwidth: 313.37GiB/s
+2023-07-03 01:33:38.004160: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:38.004185: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:33:38.004206: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2023-07-03 01:33:38.004223: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2023-07-03 01:33:38.004239: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2023-07-03 01:33:38.004255: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2023-07-03 01:33:38.004716: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2023-07-03 01:33:38.004738: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:33:38.005414: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2023-07-03 01:33:38.005450: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2023-07-03 01:33:38.005463: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2023-07-03 01:33:38.005473: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2023-07-03 01:33:38.006198: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 11278 MB memory) -> physical GPU (device: 0, name: NVIDIA GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+2023-07-03 01:33:38.008152: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2023-07-03 01:33:38.008554: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:02:00.0 name: NVIDIA GeForce GTX TITAN X computeCapability: 5.2
+coreClock: 1.076GHz coreCount: 24 deviceMemorySize: 11.93GiB deviceMemoryBandwidth: 313.37GiB/s
+2023-07-03 01:33:38.008749: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:38.008774: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:33:38.008791: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2023-07-03 01:33:38.008808: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2023-07-03 01:33:38.008824: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2023-07-03 01:33:38.008840: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2023-07-03 01:33:38.009298: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2023-07-03 01:33:38.009323: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:33:38.010008: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2023-07-03 01:33:38.010044: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2023-07-03 01:33:38.010059: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2023-07-03 01:33:38.010069: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2023-07-03 01:33:38.010788: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/device:GPU:0 with 11278 MB memory) -> physical GPU (device: 0, name: NVIDIA GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+2023-07-03 01:33:38.372887: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2023-07-03 01:33:38.373471: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1720] Found device 0 with properties: 
+pciBusID: 0000:02:00.0 name: NVIDIA GeForce GTX TITAN X computeCapability: 5.2
+coreClock: 1.076GHz coreCount: 24 deviceMemorySize: 11.93GiB deviceMemoryBandwidth: 313.37GiB/s
+2023-07-03 01:33:38.375227: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.11.0
+2023-07-03 01:33:38.375281: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:33:38.375310: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+2023-07-03 01:33:38.375336: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcufft.so.10
+2023-07-03 01:33:38.376303: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcurand.so.10
+2023-07-03 01:33:38.376802: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusolver.so.10
+2023-07-03 01:33:38.376839: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcusparse.so.11
+2023-07-03 01:33:38.376867: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:33:38.378238: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1862] Adding visible gpu devices: 0
+2023-07-03 01:33:38.378293: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1261] Device interconnect StreamExecutor with strength 1 edge matrix:
+2023-07-03 01:33:38.378314: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1267]      0 
+2023-07-03 01:33:38.378330: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1280] 0:   N 
+2023-07-03 01:33:38.379318: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1406] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 11278 MB memory) -> physical GPU (device: 0, name: NVIDIA GeForce GTX TITAN X, pci bus id: 0000:02:00.0, compute capability: 5.2)
+2023-07-03 01:33:41.739734: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2023-07-03 01:33:41.741050: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 2399870000 Hz
+2023-07-03 01:33:51.809748: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 53 of 882
+2023-07-03 01:34:02.436889: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 84 of 882
+2023-07-03 01:34:11.750383: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 127 of 882
+2023-07-03 01:34:21.743799: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 166 of 882
+2023-07-03 01:34:32.881411: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 201 of 882
+2023-07-03 01:34:42.644157: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 235 of 882
+2023-07-03 01:34:52.341453: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 273 of 882
+2023-07-03 01:35:02.219851: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 315 of 882
+2023-07-03 01:35:11.766161: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 357 of 882
+2023-07-03 01:35:22.320924: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 399 of 882
+2023-07-03 01:35:31.759168: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 435 of 882
+2023-07-03 01:35:41.847298: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 473 of 882
+2023-07-03 01:35:51.856731: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 522 of 882
+2023-07-03 01:36:03.711261: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 566 of 882
+2023-07-03 01:36:11.817448: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 597 of 882
+2023-07-03 01:36:21.777951: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 627 of 882
+2023-07-03 01:36:31.816391: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 679 of 882
+2023-07-03 01:36:42.367926: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 712 of 882
+2023-07-03 01:36:53.318700: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 745 of 882
+2023-07-03 01:37:01.849896: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 789 of 882
+2023-07-03 01:37:12.419506: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 828 of 882
+2023-07-03 01:37:20.817429: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+2023-07-03 01:37:24.789611: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudnn.so.8
+2023-07-03 01:37:25.990220: W tensorflow/stream_executor/gpu/asm_compiler.cc:63] Running ptxas --version returned 256
+2023-07-03 01:37:26.320262: W tensorflow/stream_executor/gpu/redzone_allocator.cc:314] Internal: ptxas exited with non-zero error code 256, output: 
+Relying on driver to perform ptx compilation. 
+Modify $PATH to customize ptxas location.
+This message will be only logged once.
+2023-07-03 01:37:28.818907: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublas.so.11
+2023-07-03 01:37:29.184502: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcublasLt.so.11
+running on environment: "blaze"
+GPU 1 is free.
+Setting environment to use GPU: 0
+
+0
+
+Num GPUs Available:  1
+TensorFlow is using GPU: /device:GPU:0
+Step: 0k
+........2023-07-03 01:42:48.269545: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 363 of 882
+2023-07-03 01:42:58.382857: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 715 of 882
+2023-07-03 01:43:02.320427: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:43:52.019072: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 376 of 882
+2023-07-03 01:44:02.136901: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 848 of 882
+2023-07-03 01:44:02.361010: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:44:52.198848: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 601 of 882
+2023-07-03 01:44:58.052104: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:45:48.411455: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 456 of 882
+2023-07-03 01:45:57.606511: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:46:47.037093: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 523 of 882
+2023-07-03 01:46:53.537627: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:47:42.976946: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 517 of 882
+2023-07-03 01:47:49.920572: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:48:39.563035: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 443 of 882
+2023-07-03 01:48:48.224933: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:49:38.435465: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 540 of 882
+2023-07-03 01:49:47.112337: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:50:36.781649: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 661 of 882
+2023-07-03 01:50:39.995993: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:51:31.139602: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 565 of 882
+2023-07-03 01:51:36.715541: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+........2023-07-03 01:52:28.624511: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 462 of 882
+2023-07-03 01:52:36.639959: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+...Time taken for 1000 steps: 1144.38 sec
+
+Step: 1k
+......2023-07-03 01:53:33.205179: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 384 of 882
+2023-07-03 01:53:39.863558: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:54:31.473020: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 535 of 882
+2023-07-03 01:54:34.730431: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:55:25.388369: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 550 of 882
+2023-07-03 01:55:32.033851: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 01:56:23.027769: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 512 of 882
+2023-07-03 01:56:29.112350: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+....................................2023-07-03 01:59:46.914399: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 779 of 882
+2023-07-03 01:59:47.710253: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+...............................Time taken for 1000 steps: 579.36 sec
+
+Step: 2k
+....................................................................................................Time taken for 1000 steps: 508.31 sec
+
+Step: 3k
+....................................................................................................Time taken for 1000 steps: 502.03 sec
+
+Step: 4k
+....................................................................................................Time taken for 1000 steps: 517.92 sec
+
+Step: 5k
+....................................................................................................Time taken for 1000 steps: 511.52 sec
+
+Step: 6k
+....................................................................................................Time taken for 1000 steps: 520.06 sec
+
+Step: 7k
+....................................................................................................Time taken for 1000 steps: 519.13 sec
+
+Step: 8k
+....................................................................................................Time taken for 1000 steps: 495.30 sec
+
+Step: 9k
+....................................................................................................Time taken for 1000 steps: 510.97 sec
+
+Step: 10k
+....................................................................................................Time taken for 1000 steps: 492.02 sec
+
+Step: 11k
+....................................................................................................Time taken for 1000 steps: 494.43 sec
+
+Step: 12k
+....................................................................................................Time taken for 1000 steps: 490.46 sec
+
+Step: 13k
+....................................................................................................Time taken for 1000 steps: 487.11 sec
+
+Step: 14k
+....................................................................................................Time taken for 1000 steps: 496.61 sec
+
+Step: 15k
+....................................................................................................Time taken for 1000 steps: 487.44 sec
+
+Step: 16k
+....................................................................................................Time taken for 1000 steps: 490.50 sec
+
+Step: 17k
+....................................................................................................Time taken for 1000 steps: 479.92 sec
+
+Step: 18k
+....................................................................................................Time taken for 1000 steps: 479.13 sec
+
+Step: 19k
+....................................................................................................Time taken for 1000 steps: 497.66 sec
+
+Step: 20k
+....................................................................................................Time taken for 1000 steps: 486.08 sec
+
+Step: 21k
+....................................................................................................Time taken for 1000 steps: 494.15 sec
+
+Step: 22k
+....................................................................................................Time taken for 1000 steps: 481.24 sec
+
+Step: 23k
+....................................................................................................Time taken for 1000 steps: 479.11 sec
+
+Step: 24k
+....................................................................................................Time taken for 1000 steps: 497.71 sec
+
+Step: 25k
+....................................................................................................Time taken for 1000 steps: 484.68 sec
+
+Step: 26k
+....................................................................................................Time taken for 1000 steps: 482.18 sec
+
+Step: 27k
+....................................................................................................Time taken for 1000 steps: 477.25 sec
+
+Step: 28k
+....................................................................................................Time taken for 1000 steps: 484.11 sec
+
+Step: 29k
+....................................................................................................Time taken for 1000 steps: 506.31 sec
+
+Step: 30k
+........................................................................................2023-07-03 06:00:31.627842: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 535 of 882
+2023-07-03 06:00:35.724575: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:01:22.611999: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 648 of 882
+2023-07-03 06:01:26.817986: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+...Time taken for 1000 steps: 500.36 sec
+
+Step: 31k
+......2023-07-03 06:02:21.271833: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 547 of 882
+2023-07-03 06:02:26.288893: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:03:13.150923: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 505 of 882
+2023-07-03 06:03:18.649807: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+........2023-07-03 06:04:08.202371: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 581 of 882
+2023-07-03 06:04:13.821119: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:05:00.432740: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 550 of 882
+2023-07-03 06:05:06.702161: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:05:52.920580: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 658 of 882
+2023-07-03 06:05:58.268311: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:06:44.585135: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 602 of 882
+2023-07-03 06:06:49.003297: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:07:35.372376: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 593 of 882
+2023-07-03 06:07:40.126776: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:08:26.592203: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 624 of 882
+2023-07-03 06:08:30.972792: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:09:17.687868: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 504 of 882
+2023-07-03 06:09:21.864776: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:10:08.633648: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 707 of 882
+2023-07-03 06:10:10.185085: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:10:59.206057: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 611 of 882
+2023-07-03 06:11:04.627624: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.....Time taken for 1000 steps: 585.31 sec
+
+Step: 32k
+....2023-07-03 06:11:55.545434: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 668 of 882
+2023-07-03 06:11:58.689552: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+........2023-07-03 06:12:44.976163: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 661 of 882
+2023-07-03 06:12:48.352883: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:13:34.700861: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 559 of 882
+2023-07-03 06:13:39.777171: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:14:25.863448: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 658 of 882
+2023-07-03 06:14:30.647673: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:15:16.764589: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 649 of 882
+2023-07-03 06:15:20.680663: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:16:06.921930: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 720 of 882
+2023-07-03 06:16:09.454009: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:16:55.442210: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 538 of 882
+2023-07-03 06:17:01.259447: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:17:47.012186: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 664 of 882
+2023-07-03 06:17:50.352250: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:18:37.324954: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 512 of 882
+2023-07-03 06:18:43.912599: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:19:30.765781: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 550 of 882
+2023-07-03 06:19:36.524734: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:20:22.722140: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 557 of 882
+2023-07-03 06:20:29.218008: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.......Time taken for 1000 steps: 572.87 sec
+
+Step: 33k
+.2023-07-03 06:21:19.938366: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 582 of 882
+2023-07-03 06:21:27.014703: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:22:14.165441: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 632 of 882
+2023-07-03 06:22:18.577543: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:23:05.117710: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 558 of 882
+2023-07-03 06:23:12.313932: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:24:01.099400: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 544 of 882
+2023-07-03 06:24:04.201287: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:24:50.717681: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 584 of 882
+2023-07-03 06:24:55.977788: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:25:41.823685: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 819 of 882
+2023-07-03 06:25:43.053316: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:26:29.362036: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 867 of 882
+2023-07-03 06:26:29.526611: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:27:17.196446: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 597 of 882
+2023-07-03 06:27:21.063614: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:28:07.363471: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 616 of 882
+2023-07-03 06:28:11.773831: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:28:57.606767: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 493 of 882
+2023-07-03 06:29:05.163343: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+........2023-07-03 06:29:51.264868: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 547 of 882
+2023-07-03 06:29:54.377461: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:30:40.549754: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 568 of 882
+2023-07-03 06:30:46.785302: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.Time taken for 1000 steps: 590.35 sec
+
+Step: 34k
+........2023-07-03 06:31:36.992019: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 711 of 882
+2023-07-03 06:31:39.628944: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:32:26.108574: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 651 of 882
+2023-07-03 06:32:28.688747: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:33:15.494467: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 565 of 882
+2023-07-03 06:33:19.761540: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:34:05.757001: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 715 of 882
+2023-07-03 06:34:06.874829: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:34:53.281224: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 601 of 882
+2023-07-03 06:34:57.236808: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:35:43.818626: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 703 of 882
+2023-07-03 06:35:45.125480: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:36:31.310261: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 606 of 882
+2023-07-03 06:36:33.960252: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.........2023-07-03 06:37:20.504565: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 743 of 882
+2023-07-03 06:37:24.058637: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+........2023-07-03 06:38:10.547798: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:177] Filling up shuffle buffer (this may take a while): 868 of 882
+2023-07-03 06:38:10.647833: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:230] Shuffle buffer filled.
+.....................Time taken for 1000 steps: 550.43 sec
+
+Step: 35k
+....................................................................................................Time taken for 1000 steps: 480.97 sec
+
+Step: 36k
+....................................................................................................Time taken for 1000 steps: 478.44 sec
+
+Step: 37k
+....................................................................................................Time taken for 1000 steps: 481.36 sec
+
+Step: 38k
+....................................................................................................Time taken for 1000 steps: 488.15 sec
+
+Step: 39k
+..................................................................................................../cs/student/msc/aisd/2022/cboehm/projects/sis2/sis_helper.py:149: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`).
+  fig, ax = plt.subplots(num_images, 3, figsize=(15,5*num_images))
