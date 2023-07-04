@@ -3,6 +3,8 @@ data/
 logs_5e/
 venvtf2/
 training_checkpoints/
+# snap-created directory on cpom:
+?/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
