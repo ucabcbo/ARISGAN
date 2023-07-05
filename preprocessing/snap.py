@@ -31,7 +31,7 @@ def region_subset(raw, region):
     parameters.put('subSamplingX','1')
     parameters.put('subSamplingY','1')
     parameters.put('fullSwath','false')
-    parameters.put('copyMetadata','false')
+    parameters.put('copyMetadata','true')
     result = snappy.GPF.createProduct('Subset', parameters, raw)
     # print(f'Subset created, result has {len(list(result.getBandNames()))} bands')
     return result
@@ -99,9 +99,9 @@ def plot_tile(product, cloudmask=False, figsize=(10,10)):
     plt.show()
 
 
-def cut_tiles(product, TILESIZE, IMG_INDEX, s2_filename, output_path):
-    tile_inventory = pd.DataFrame(columns=['img_index', 'tile', 'size', 'status', 'comment', 'filename'])
-    tile_inventory = tile_inventory.astype({'img_index': str,
+def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
+    tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'comment', 'filename'])
+    tile_inventory = tile_inventory.astype({'pair_index': str,
                         'tile': str,
                         'size': int,
                         'status': str,
@@ -125,7 +125,7 @@ def cut_tiles(product, TILESIZE, IMG_INDEX, s2_filename, output_path):
     # Starting offset to center the tiles on the image, i.e. half the distance between the individual tile gaps
     x_offset = int((product.getSceneRasterHeight() - ((x_tiles-1)*x_step+(TILESIZE-1))) / 2)
 
-    TILE_PREFIX = f'{IMG_INDEX:05d}'
+    TILE_PREFIX = f'{PAIR_INDEX:05d}'
 
     for x in range(x_tiles):
         for y in range(y_tiles):
@@ -159,7 +159,7 @@ def cut_tiles(product, TILESIZE, IMG_INDEX, s2_filename, output_path):
                 blackpct = np.count_nonzero(black_array == -0.1) / np.size(cloud_array)
                 if blackpct > 0.05:
                     status = 'quality'
-                    comment = f'black proportion: {int(blackpct * 100)}%'
+                    comment = f'S2 black: {int(blackpct * 100)}%'
 
                 if status == 'ok':
                     ProductIO.writeProduct(tile, os.path.join(output_path, output_filename), 'GeoTIFF')
@@ -167,23 +167,24 @@ def cut_tiles(product, TILESIZE, IMG_INDEX, s2_filename, output_path):
                 elif status == 'quality':
                     quality_list[TILECODE] = tile
                 
-                tile_inventory = tile_inventory.append({'img_index': TILE_PREFIX,
+                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
                                         'tile': TILECODE,
                                         'size': TILESIZE,
                                         'status': status,
                                         'comment': comment,
-                                        'filename': s2_filename}, ignore_index=True)
+                                        'filename': output_filename}, ignore_index=True)
                 
             except Exception as e:
-                tile_inventory = tile_inventory.append({'img_index': TILE_PREFIX,
+                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
                                         'tile': TILECODE,
                                         'size': TILESIZE,
                                         'status': 'error',
-                                        'comment': str(e),
-                                        'filename': s2_filename}, ignore_index=True)
+                                        'comment': str(e)}, ignore_index=True)
                 continue
     
-    return tile_inventory, tile_list, quality_list
+    tile_inventory.to_csv(os.path.join(output_path, f'inventory/{TILE_PREFIX}_{TILESIZE}.csv'), index=False)
+
+    return tile_list, quality_list
 
 
 def s2_metadata_cloud_percentage(s2_product):
