@@ -98,6 +98,22 @@ def plot_tile(product, cloudmask=False, figsize=(10,10)):
     # fig.axes.get_yaxis().set_visible(False)
     plt.show()
 
+def plot_s3_tile(product, figsize=(10,10)):
+    # Extract the bands for red, green, and blue
+
+    red_data = helper.normalize_numpy(nparray(product, 'Oa17_radiance'))
+    green_data = helper.normalize_numpy(nparray(product, 'Oa06_radiance'))
+    blue_data = helper.normalize_numpy(nparray(product, 'Oa03_radiance'))
+
+    stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
+
+    plt.figure(figsize=figsize)
+    plt.imshow(stacked_array)
+
+    # fig.axes.get_xaxis().set_visible(False)
+    # fig.axes.get_yaxis().set_visible(False)
+    plt.show()
+
 
 def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
     tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'comment', 'filename'])
@@ -155,11 +171,18 @@ def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
                     status = 'quality'
                     comment = f'cloud coverage: {int(cloudpct * 100)}%'
 
-                black_array = nparray(tile, 'B2')
-                blackpct = np.count_nonzero(black_array == -0.1) / np.size(cloud_array)
-                if blackpct > 0.05:
+                black_array_s2 = nparray(tile, 'B2')
+                blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
+                if blackpct_s2 > 0.05:
                     status = 'quality'
-                    comment = f'S2 black: {int(blackpct * 100)}%'
+                    comment = f'S2 black: {int(blackpct_s2 * 100)}%'
+
+                black_array_s3 = nparray(tile, 'Oa17_radiance')
+                max_value = np.max(black_array_s3)
+                blackpct_s3 = np.count_nonzero(black_array_s3 == max_value) / np.size(black_array_s3)
+                if blackpct_s3 > 0.05:
+                    status = 'quality'
+                    comment = f'S3 (likely) black: {int(blackpct_s3 * 100)}%'
 
                 if status == 'ok':
                     ProductIO.writeProduct(tile, os.path.join(output_path, output_filename), 'GeoTIFF')
@@ -173,6 +196,8 @@ def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
                                         'status': status,
                                         'comment': comment,
                                         'filename': output_filename}, ignore_index=True)
+                
+                tile.dispose()
                 
             except Exception as e:
                 tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
@@ -199,28 +224,35 @@ def s2_metadata_cloud_percentage(s2_product):
 
 
 def check_overlap(product_a, product_b):
+    
+    # Initialize geocoding for product_a (Sentinel-2) and product_b (Sentinel-3)
     gc_a = product_a.getSceneGeoCoding()
     gc_b = product_b.getSceneGeoCoding()
 
+    # Get geolocation of pixel (0,0) and pixel (max,max) in each image
     min_a = gc_a.getGeoPos(PixelPos(0, 0), None)
     max_a = gc_a.getGeoPos(PixelPos(product_a.getSceneRasterWidth(), product_a.getSceneRasterHeight()), None)
 
     min_b = gc_b.getGeoPos(PixelPos(0, 0), None)
     max_b = gc_b.getGeoPos(PixelPos(product_b.getSceneRasterWidth(), product_b.getSceneRasterHeight()), None)
 
+    # Create bbox for each
     bbox_a = [[min_a.getLat(), min_a.getLon()], [max_a.getLat(), min_a.getLon()],
                 [max_a.getLat(), max_a.getLon()], [min_a.getLat(), max_a.getLon()]]
     
     bbox_b = [[min_b.getLat(), min_b.getLon()], [max_b.getLat(), min_b.getLon()],
                 [max_b.getLat(), max_b.getLon()], [min_b.getLat(), max_b.getLon()]]
     
+    # Define shapely Polygon based on the bboxes
     polygon_a = Polygon(bbox_a)
     polygon_b = Polygon(bbox_b)
     
-    # intersect = polygon_1.intersection(
-    #     polygon_2).area / polygon_1.union(polygon_2).area
-
+    # Define overlap ratio as: S2/S3 intersection area in relation to S2 area
     intersect = polygon_a.intersection(
         polygon_b).area / polygon_a.area
 
     return intersect
+
+
+    # intersect = polygon_1.intersection(
+    #     polygon_2).area / polygon_1.union(polygon_2).area

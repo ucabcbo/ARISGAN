@@ -37,6 +37,7 @@ elif ENVIRONMENT == 'local':
     PATH_DATA = '/Users/christianboehm/projects/sis2/data/'
 
 TILESIZE = 256
+# TILESIZE = 960
 
 img_pairs_inventory = pd.read_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'), index_col='index')
 
@@ -45,7 +46,9 @@ for index, row in img_pairs_inventory.iterrows():
         status = row['status']
         print(f'index {index} skipped due to status \'{status}\'')
         continue
-    
+
+    row = img_pairs_inventory.iloc[index]
+
     S2_FILE = row['s2']
     S3_FILE = row['s3']
     print(row['s2'])
@@ -62,17 +65,19 @@ for index, row in img_pairs_inventory.iterrows():
         continue
 
     s2_bands = snap.band_subset(s2_raw, 'B2,B3,B4,B_opaque_clouds')
-    s3_bands = s3_raw
+    # s3_bands = s3_raw
     s3_bands = snap.band_subset(s3_raw, 'Oa01_radiance,Oa02_radiance,Oa03_radiance,Oa04_radiance,Oa05_radiance,Oa06_radiance,Oa07_radiance,Oa08_radiance,Oa09_radiance,Oa10_radiance,Oa11_radiance,Oa12_radiance,Oa13_radiance,Oa14_radiance,Oa15_radiance,Oa16_radiance,Oa17_radiance,Oa18_radiance,Oa19_radiance,Oa20_radiance,Oa21_radiance')
     s2_bands = snap.resample(s2_bands, 'B2')
     collocated = snap.collocate(s2_bands, s3_bands)
     collocated = snap.band_subset(collocated,'B2,B3,B4,Oa01_radiance,Oa02_radiance,Oa03_radiance,Oa04_radiance,Oa05_radiance,Oa06_radiance,Oa07_radiance,Oa08_radiance,Oa09_radiance,Oa10_radiance,Oa11_radiance,Oa12_radiance,Oa13_radiance,Oa14_radiance,Oa15_radiance,Oa16_radiance,Oa17_radiance,Oa18_radiance,Oa19_radiance,Oa20_radiance,Oa21_radiance,B_opaque_clouds,quality_flags,collocationFlags')
-    s2_raw.dispose()
-    s3_raw.dispose()
-    s2_bands.dispose()
-    s3_bands.dispose()
 
     tile_list, quality_list = snap.cut_tiles(collocated, TILESIZE, index, PATH_DATA)
 
     img_pairs_inventory.loc[index, 'status'] = 'tifs created'
     img_pairs_inventory.to_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'))
+
+    s2_raw.dispose()
+    s3_raw.dispose()
+    s2_bands.dispose()
+    s3_bands.dispose()
+    collocated.dispose()

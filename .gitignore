@@ -3,6 +3,8 @@ data/
 logs_5e/
 venvtf2/
 training_checkpoints/
+*.txt
+
 # snap-created directory on cpom:
 ?/
 
