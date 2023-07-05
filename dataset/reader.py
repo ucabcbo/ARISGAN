@@ -5,10 +5,11 @@ import sis_helper as helper
 
 class Reader():
 
-    def __init__(self, TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BUFFER_SIZE, BATCH_SIZE):
+    def __init__(self, TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BUFFER_SIZE, BATCH_SIZE, SHUFFLE):
         self.TILESIZE = TILESIZE
         self.IMG_HEIGHT = IMG_HEIGHT
         self.IMG_WIDTH = IMG_WIDTH
+        self.SHUFFLE = SHUFFLE
 
         train_file_list = [os.path.join(PATH_TRAIN, file) for file in os.listdir(PATH_TRAIN) if file.endswith('.tfrecord')]
         train_dataset = tf.data.TFRecordDataset(train_file_list)
@@ -16,7 +17,8 @@ class Reader():
         # train_dataset = tf.data.Dataset.list_files(str(f'{PATH_TRAIN}/*.tfrecords'))
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
-        train_dataset = train_dataset.shuffle(BUFFER_SIZE)
+        if self.SHUFFLE:
+            train_dataset = train_dataset.shuffle(BUFFER_SIZE)
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 
@@ -27,7 +29,8 @@ class Reader():
             test_dataset = tf.data.TFRecordDataset(train_file_list)
         test_dataset = test_dataset.map(self.load_image_test)
         #TODO: check if shuffling is helpful (added for validation)
-        # test_dataset = test_dataset.shuffle(BUFFER_SIZE)
+        # if self.SHUFFLE:
+            # test_dataset = test_dataset.shuffle(BUFFER_SIZE)
         test_dataset = test_dataset.batch(BATCH_SIZE)
         self.test_dataset = test_dataset
 
