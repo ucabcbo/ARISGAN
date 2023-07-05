@@ -10,6 +10,7 @@ parser.add_argument("--lmbda", type=int, help="tbd", default=100)
 parser.add_argument("--progress_freq", type=int, default=1000, help="display progress every n steps")
 parser.add_argument("--save_freq", type=int, default=5000, help="save model every n steps")
 parser.add_argument("--suffix", default=None, help="suffix for output paths")
+parser.add_argument("--shuffle", default='y', help="tbd")
 
 # parser.add_argument("--lr", type=float, default=0.0001, help="initial learning rate for adam")
 # parser.add_argument("--beta1", type=float, default=0.5, help="momentum term of adam")
@@ -26,7 +27,8 @@ a = parser.parse_args()
 print(f'Arguments read: {a}')
 
 assert a.model in ['psgan',
-                   'pix2pix']
+                   'pix2pix',
+                   'pix2pix_psganloss']
 ### End arguments
 
 import os
@@ -72,7 +74,7 @@ import datetime
 
 import sis_helper as helper
 
-from models import pix2pix, psgan
+from models import pix2pix, psgan, pix2pix_psganloss
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -132,8 +134,11 @@ if a.model == 'pix2pix':
     model = pix2pix.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 elif a.model == 'psgan':
     model = psgan.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+elif a.model == 'pix2pix_psganloss':
+    model = pix2pix_psganloss.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 
-dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, BUFFER_SIZE, a.batch_size)
+shuffle = False if a.shuffle == 'n' else True
+dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, BUFFER_SIZE, a.batch_size, shuffle)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
