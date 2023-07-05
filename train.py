@@ -143,7 +143,14 @@ discriminator = model.discriminator
 def fit(train_ds, test_ds, steps):
     # example_target, example_input = next(iter(test_ds.take(1)))
     start = time.time()
-    
+    example_targets = []
+    example_inputs = []
+    for example_target, example_input in test_dataset.take(5):
+        example_targets.append(example_target[0])
+        example_inputs.append(example_input[0])
+    example_inputs = tf.stack(example_inputs, axis=0)
+    example_targets = tf.stack(example_targets, axis=0)
+
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
         if (step) % a.progress_freq == 0:
             # display.clear_output(wait=True)
@@ -151,9 +158,10 @@ def fit(train_ds, test_ds, steps):
             if step != 0:
                 print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
-
-            for example_target, example_input in test_dataset.take(1):
-                helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
+            
+            helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
+            # for example_target, example_input in test_dataset.take(1):
+            #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
             print(f"Step: {step}")
 
