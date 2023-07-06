@@ -1,8 +1,0 @@
-running on environment: "blaze"
-GPU 1 is free.
-Setting environment to use GPU: 0
-
-0
-
-Num GPUs Available:  1
-TensorFlow is using GPU: /device:GPU:0
