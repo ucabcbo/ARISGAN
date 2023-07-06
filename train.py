@@ -115,7 +115,7 @@ else:
     path_prefix = f'~/projects/sis2/data'
 
 path_train = os.path.join(path_prefix, f'tfrecords{a.tilesize}/')
-path_val = os.path.join(path_prefix, f'tfrecords{a.tilesize}/')
+path_val = os.path.join(path_prefix, f'tfrecords{a.tilesize}_val/')
 
 path_subfolder = f'{STARTTIME}_{a.model}_{a.batch_size}x{a.tilesize}'
 if a.suffix is not None:
@@ -164,7 +164,7 @@ def fit(train_ds, test_ds, steps):
                 print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
             
-            helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
+            helper.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
