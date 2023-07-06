@@ -1,258 +1,79 @@
+import sys
+sys.path.append('/home/cb/sis2/')
+
+with open('env.txt') as f:
+    ENVIRONMENT = f.readlines()[0][:-1]
+print(f'running on environment: "{ENVIRONMENT}"')
+assert ENVIRONMENT in ['blaze',
+                       'colab',
+                       'local',
+                       'cpom']
 
 import os
-from matplotlib import pyplot as plt
-import matplotlib.cm as cm
+import sys
 import numpy as np
+from matplotlib import pyplot as plt
 import pandas as pd
-from shapely.geometry import Polygon
 
+sys.path.append('~/.snap/snap-python')
 import snappy
-from snappy import ProductIO, PixelPos
+from snappy import ProductIO
 from snappy import jpy
 HashMap = snappy.jpy.get_type('java.util.HashMap')
 
-import sys
 sys.path.append('../')
-import sis_helper as helper
+import sis_toolbox as toolbox
+import preprocessing.snap_toolbox as snap_toolbox
 
+if ENVIRONMENT == 'cpom':
+    PATH_DATA = '/home/cb/sis2/data/'
+elif ENVIRONMENT == 'local':
+    PATH_DATA = '/Users/christianboehm/projects/sis2/data/'
 
-def band_subset(raw, bands):
-    parameters = HashMap()
-    parameters.put('sourceBands',bands)
-    result = snappy.GPF.createProduct('BandSelect', parameters, raw)
-    # print(f'Subset created with {len(list(result.getBandNames()))} bands')
-    return result
+TILESIZE = 256
+# TILESIZE = 960
 
+img_pairs_inventory = pd.read_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'), index_col='index')
 
-def region_subset(raw, region):
-    parameters = HashMap()
-    parameters.put('referenceBand','B2')
-    parameters.put('region',region)
-    parameters.put('subSamplingX','1')
-    parameters.put('subSamplingY','1')
-    parameters.put('fullSwath','false')
-    parameters.put('copyMetadata','true')
-    result = snappy.GPF.createProduct('Subset', parameters, raw)
-    # print(f'Subset created, result has {len(list(result.getBandNames()))} bands')
-    return result
+for index, row in img_pairs_inventory.iterrows():
+    if not (pd.isna(img_pairs_inventory['status'].iloc[index]) or img_pairs_inventory['status'].iloc[index] == 'new'):
+        status = row['status']
+        print(f'index {index} skipped due to status \'{status}\'')
+        continue
 
+    row = img_pairs_inventory.iloc[index]
 
-def resample(raw, reference_band, upsamling_method='Nearest'):
-    parameters = HashMap()
-    parameters.put('referenceBand',reference_band)
-    parameters.put('upsampling',upsamling_method)
-    parameters.put('downsampling','First')
-    parameters.put('flagDownsampling','First')
-    parameters.put('resampleOnPyramidLevels','true')
-    result = snappy.GPF.createProduct('Resample', parameters, raw)
-    # print(f'Resampled, result has {len(list(result.getBandNames()))} bands')
-    return result
+    S2_FILE = row['s2']
+    S3_FILE = row['s3']
+    print(row['s2'])
+    print(row['s3'])
 
+    s2_raw = ProductIO.readProduct(S2_FILE)
+    s3_raw = ProductIO.readProduct(S3_FILE)
 
-def collocate(master, slave, resampling_method='NEAREST_NEIGHBOUR', rename=False):
-    parameters = HashMap()
-    parameters.put('masterProductName',master.getName())
-    # parameters.put('targetProductName','_collocated')
-    parameters.put('targetProductType','COLLOCATED')
-    parameters.put('resamplingType',resampling_method)
-    if rename:
-        parameters.put('renameMasterComponents','true')
-        parameters.put('renameSlaveComponents','true')
-        parameters.put('masterComponentPattern','${ORIGINAL_NAME}_M')
-        parameters.put('slaveComponentPattern','${ORIGINAL_NAME}_S${SLAVE_NUMBER_ID}')
-    else:
-        parameters.put('renameMasterComponents','false')
-        parameters.put('renameSlaveComponents','false')
-    result = snappy.GPF.createProduct('Collocate', parameters, [master, slave])
-    # print(f'Collocated, result has {len(list(result.getBandNames()))} bands')
-    return result
+    overlap = snap_toolbox.check_overlap(s2_raw, s3_raw)
+    img_pairs_inventory.loc[index, 'possible overlap'] = overlap
+    if overlap < 1:
+        img_pairs_inventory.loc[index, 'status'] = 'no overlap'
+        print(f'index {index} skipped due to overlap < 1')
+        continue
 
+    s2_bands = snap_toolbox.band_subset(s2_raw, 'B2,B3,B4,B_opaque_clouds')
+    # s3_bands = s3_raw
+    s3_bands = snap_toolbox.band_subset(s3_raw, 'Oa01_radiance,Oa02_radiance,Oa03_radiance,Oa04_radiance,Oa05_radiance,Oa06_radiance,Oa07_radiance,Oa08_radiance,Oa09_radiance,Oa10_radiance,Oa11_radiance,Oa12_radiance,Oa13_radiance,Oa14_radiance,Oa15_radiance,Oa16_radiance,Oa17_radiance,Oa18_radiance,Oa19_radiance,Oa20_radiance,Oa21_radiance')
+    s2_bands = snap_toolbox.resample(s2_bands, 'B2')
+    collocated = snap_toolbox.collocate(s2_bands, s3_bands)
+    collocated = snap_toolbox.band_subset(collocated,'B2,B3,B4,Oa01_radiance,Oa02_radiance,Oa03_radiance,Oa04_radiance,Oa05_radiance,Oa06_radiance,Oa07_radiance,Oa08_radiance,Oa09_radiance,Oa10_radiance,Oa11_radiance,Oa12_radiance,Oa13_radiance,Oa14_radiance,Oa15_radiance,Oa16_radiance,Oa17_radiance,Oa18_radiance,Oa19_radiance,Oa20_radiance,Oa21_radiance,B_opaque_clouds,quality_flags,collocationFlags')
 
-def nparray(product, bandname):
-    band = product.getBand(bandname)
-    width = band.getRasterWidth()
-    height = band.getRasterHeight()
-    nparray = np.zeros(width*height, dtype=np.float32)
-    band.readPixels(0,0,width,height,nparray)
-    nparray.shape = (height,width)
-    return nparray
+    tile_list, quality_list = snap_toolbox.cut_tiles(collocated, TILESIZE, index, PATH_DATA)
 
+    img_pairs_inventory.loc[index, 'status'] = 'tifs created'
+    img_pairs_inventory.to_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'))
 
-def plot_tile(product, cloudmask=False, figsize=(10,10)):
-    # Extract the bands for red, green, and blue
+    s2_raw.dispose()
+    s3_raw.dispose()
+    s2_bands.dispose()
+    s3_bands.dispose()
+    collocated.dispose()
 
-    red_data = helper.normalize_numpy(nparray(product, 'B4'))
-    green_data = helper.normalize_numpy(nparray(product, 'B3'))
-    blue_data = helper.normalize_numpy(nparray(product, 'B2'))
-
-    stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
-
-    plt.figure(figsize=figsize)
-    plt.imshow(stacked_array)
-
-    if cloudmask:
-        cloud_data = ~(nparray(product, 'B_opaque_clouds').astype(int))
-        plt.imshow(cloud_data, alpha=0.3, cmap=cm.gray)
-
-    # fig.axes.get_xaxis().set_visible(False)
-    # fig.axes.get_yaxis().set_visible(False)
-    plt.show()
-
-def plot_s3_tile(product, figsize=(10,10)):
-    # Extract the bands for red, green, and blue
-
-    red_data = helper.normalize_numpy(nparray(product, 'Oa17_radiance'))
-    green_data = helper.normalize_numpy(nparray(product, 'Oa06_radiance'))
-    blue_data = helper.normalize_numpy(nparray(product, 'Oa03_radiance'))
-
-    stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
-
-    plt.figure(figsize=figsize)
-    plt.imshow(stacked_array)
-
-    # fig.axes.get_xaxis().set_visible(False)
-    # fig.axes.get_yaxis().set_visible(False)
-    plt.show()
-
-
-def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
-    tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'comment', 'filename'])
-    tile_inventory = tile_inventory.astype({'pair_index': str,
-                        'tile': str,
-                        'size': int,
-                        'status': str,
-                        'comment': str,
-                        'filename': str})
-
-    tile_list = dict()
-    quality_list = dict()
-
-    # Number of tiles in y direction
-    y_tiles = int(product.getSceneRasterHeight() / TILESIZE)
-    # Starting pixel of each tile (i.e.: width from one tile to the next)
-    y_step = int(product.getSceneRasterHeight() / y_tiles)
-    # Starting offset to center the tiles on the image, i.e. half the distance between the individual tile gaps
-    y_offset = int((product.getSceneRasterHeight() - ((y_tiles-1)*y_step+(TILESIZE-1))) / 2)
-
-    # Number of tiles in x direction
-    x_tiles = int(product.getSceneRasterHeight() / TILESIZE)
-    # Starting pixel of each tile (i.e.: width from one tile to the next)
-    x_step = int(product.getSceneRasterHeight() / x_tiles)
-    # Starting offset to center the tiles on the image, i.e. half the distance between the individual tile gaps
-    x_offset = int((product.getSceneRasterHeight() - ((x_tiles-1)*x_step+(TILESIZE-1))) / 2)
-
-    TILE_PREFIX = f'{PAIR_INDEX:05d}'
-
-    for x in range(x_tiles):
-        for y in range(y_tiles):
-            TILE_XPOS = x_offset+x*x_step
-            TILE_YPOS = y_offset+y*y_step
-            TILECODE = f'{TILE_XPOS}x{TILE_YPOS}'
-            output_filename = f'tif{TILESIZE}/{TILE_PREFIX}_{TILECODE}.tif'
-            status = 'ok'
-            comment = ''
-
-            # if os.path.exists(os.path.join(PATH_DATA, output_filename)):
-            #     tif_inventory = tif_inventory.append({'img_pair_id': TILE_PREFIX,
-            #                             'tile': TILECODE,
-            #                             'size': TILESIZE,
-            #                             'tif_status': 'exists'}, ignore_index=True)
-            #     print(f'File {output_filename} already exists')
-            #     continue
-
-
-            try:
-                region = f'{TILE_XPOS},{TILE_YPOS},{TILESIZE},{TILESIZE}'
-                tile = region_subset(product, region)
-
-                cloud_array = nparray(tile, 'B_opaque_clouds')
-                cloudpct = np.sum(cloud_array) / np.size(cloud_array)
-                if cloudpct > 0.1:
-                    status = 'quality'
-                    comment = f'cloud coverage: {int(cloudpct * 100)}%'
-
-                black_array_s2 = nparray(tile, 'B2')
-                blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
-                if blackpct_s2 > 0.05:
-                    status = 'quality'
-                    comment = f'S2 black: {int(blackpct_s2 * 100)}%'
-
-                black_array_s3 = nparray(tile, 'Oa17_radiance')
-                max_value = np.max(black_array_s3)
-                blackpct_s3 = np.count_nonzero(black_array_s3 == max_value) / np.size(black_array_s3)
-                if blackpct_s3 > 0.05:
-                    status = 'quality'
-                    comment = f'S3 (likely) black: {int(blackpct_s3 * 100)}%'
-
-                if status == 'ok':
-                    ProductIO.writeProduct(tile, os.path.join(output_path, output_filename), 'GeoTIFF')
-                    tile_list[TILECODE] = tile
-                elif status == 'quality':
-                    quality_list[TILECODE] = tile
-                
-                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
-                                        'tile': TILECODE,
-                                        'size': TILESIZE,
-                                        'status': status,
-                                        'comment': comment,
-                                        'filename': output_filename}, ignore_index=True)
-                
-                tile.dispose()
-                
-            except Exception as e:
-                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
-                                        'tile': TILECODE,
-                                        'size': TILESIZE,
-                                        'status': 'error',
-                                        'comment': str(e)}, ignore_index=True)
-                continue
-    
-    tile_inventory.to_csv(os.path.join(output_path, f'inventory/{TILE_PREFIX}_{TILESIZE}.csv'), index=False)
-
-    return tile_list, quality_list
-
-
-def s2_metadata_cloud_percentage(s2_product):
-    metadata = s2_product.getMetadataRoot()
-    cloud_pct = float(metadata.getElement('Granules')
-                      .getElementAt(0)
-                      .getElement('Quality_Indicators_Info')
-                      .getElement('Image_Content_QI')
-                      .getAttribute('CLOUDY_PIXEL_PERCENTAGE')
-                      .getData().getElemString())
-    return cloud_pct
-
-
-def check_overlap(product_a, product_b):
-    
-    # Initialize geocoding for product_a (Sentinel-2) and product_b (Sentinel-3)
-    gc_a = product_a.getSceneGeoCoding()
-    gc_b = product_b.getSceneGeoCoding()
-
-    # Get geolocation of pixel (0,0) and pixel (max,max) in each image
-    min_a = gc_a.getGeoPos(PixelPos(0, 0), None)
-    max_a = gc_a.getGeoPos(PixelPos(product_a.getSceneRasterWidth(), product_a.getSceneRasterHeight()), None)
-
-    min_b = gc_b.getGeoPos(PixelPos(0, 0), None)
-    max_b = gc_b.getGeoPos(PixelPos(product_b.getSceneRasterWidth(), product_b.getSceneRasterHeight()), None)
-
-    # Create bbox for each
-    bbox_a = [[min_a.getLat(), min_a.getLon()], [max_a.getLat(), min_a.getLon()],
-                [max_a.getLat(), max_a.getLon()], [min_a.getLat(), max_a.getLon()]]
-    
-    bbox_b = [[min_b.getLat(), min_b.getLon()], [max_b.getLat(), min_b.getLon()],
-                [max_b.getLat(), max_b.getLon()], [min_b.getLat(), max_b.getLon()]]
-    
-    # Define shapely Polygon based on the bboxes
-    polygon_a = Polygon(bbox_a)
-    polygon_b = Polygon(bbox_b)
-    
-    # Define overlap ratio as: S2/S3 intersection area in relation to S2 area
-    intersect = polygon_a.intersection(
-        polygon_b).area / polygon_a.area
-
-    return intersect
-
-
-    # intersect = polygon_1.intersection(
-    #     polygon_2).area / polygon_1.union(polygon_2).area
+img_pairs_inventory.to_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'))
