@@ -81,3 +81,5 @@ for index, row in img_pairs_inventory.iterrows():
     s2_bands.dispose()
     s3_bands.dispose()
     collocated.dispose()
+
+img_pairs_inventory.to_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'))
