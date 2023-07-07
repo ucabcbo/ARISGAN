@@ -33,10 +33,11 @@ if ENVIRONMENT == 'cpom':
 elif ENVIRONMENT == 'local':
     PATH_DATA = '/Users/christianboehm/projects/sis2/data/'
 
-# TILESIZE = 256
-TILESIZE = 960
+TILESIZE = 256
+# TILESIZE = 960
 
-img_pairs_inventory = pd.read_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'), index_col='index').loc[[16]]
+# img_pairs_inventory = pd.read_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'), index_col='index').loc[[80]]
+img_pairs_inventory = pd.read_csv(os.path.join(PATH_DATA, 'inventory/img_pairs.csv'), index_col='index')
 
 for index, row in img_pairs_inventory.iterrows():
     # if not (pd.isna(img_pairs_inventory['status'].iloc[index]) or img_pairs_inventory['status'].iloc[index] == 'new'):
@@ -66,7 +67,7 @@ for index, row in img_pairs_inventory.iterrows():
                                                      file_index=index,
                                                      output_path=PATH_DATA,
                                                      ensure_intersect_with=[s2_polygon,s3_polygon],
-                                                     cloud_threshold=0.9)
+                                                     cloud_threshold=1.0)
 
     img_pairs_inventory.loc[index, 'status'] = 'tifs created'
     img_pairs_inventory.to_csv(os.path.join(PATH_DATA, f'inventory/img_pairs_{datetime_string}.csv'))

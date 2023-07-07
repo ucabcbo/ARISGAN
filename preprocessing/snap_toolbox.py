@@ -108,13 +108,7 @@ def plot_tile(product, satellite, cloudmask=False, figsize=(10,10)):
 
 
 def cut_tiles(product, tilesize, file_index, output_path, ensure_intersect_with=[], intersect_threshold=0.95, cloud_threshold=1.0):
-    tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'comment', 'filename'])
-    tile_inventory = tile_inventory.astype({'pair_index': str,
-                        'tile': str,
-                        'size': int,
-                        'status': str,
-                        'comment': str,
-                        'filename': str})
+    tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'clouds', 'intersect', 's3black', 'error', 'filename'])
 
     file_index = f'{file_index:05d}'
 
@@ -142,8 +136,12 @@ def cut_tiles(product, tilesize, file_index, output_path, ensure_intersect_with=
             TILE_YPOS = y_offset+y*y_step
             TILECODE = f'{TILE_XPOS}x{TILE_YPOS}'
             output_tif = f'tif{tilesize}/{file_index}_{TILECODE}.tif'
-            status = 'ok'
-            comment = ''
+
+            tile_inventory = tile_inventory.append({'pair_index': file_index,
+                                    'tile': TILECODE,
+                                    'size': tilesize,
+                                    'status': 'ok'}, ignore_index=True)
+            tile_index = tile_inventory.index[-1]
 
             # if os.path.exists(os.path.join(PATH_DATA, output_filename)):
             #     tif_inventory = tif_inventory.append({'img_pair_id': TILE_PREFIX,
@@ -160,16 +158,19 @@ def cut_tiles(product, tilesize, file_index, output_path, ensure_intersect_with=
                 if cloud_threshold < 1.0:
                     cloud_array = nparray(tile, 'B_opaque_clouds')
                     cloudpct = np.sum(cloud_array) / np.size(cloud_array)
+                    tile_inventory.at[tile_index, 'clouds'] = f'{int(cloudpct * 100)}%'
                     if cloudpct > cloud_threshold:
-                        status = status + 'quality'
-                        comment = comment + f'cloud coverage: {int(cloudpct * 100)}%'
+                        tile_inventory.at[tile_index, 'status'] = 'nok'
 
-                tile_polygon = get_bbox_polygon(tile)
-                for i in range(len(ensure_intersect_with)):
-                    intersect = tile_polygon.intersection(ensure_intersect_with[i]).area / tile_polygon.area
-                    if intersect < intersect_threshold:
-                        status = status + 'intersect'
-                        comment = comment + f'Intersect with item {i}: {int(intersect * 100)}%'
+                if len(ensure_intersect_with) > 0:
+                    tile_polygon = get_bbox_polygon(tile)
+                    intersections = []
+                    for i in range(len(ensure_intersect_with)):
+                        intersect = tile_polygon.intersection(ensure_intersect_with[i]).area / tile_polygon.area
+                        if intersect < intersect_threshold:
+                            tile_inventory.at[tile_index, 'status'] = 'nok'
+                        intersections.append(f'[{i}]:{int(intersect * 100)}%')
+                    tile_inventory.at[tile_index, 'intersect'] = '|'.join(intersections)
                         
                 # black_array_s2 = nparray(tile, 'B2')
                 # blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
@@ -181,29 +182,23 @@ def cut_tiles(product, tilesize, file_index, output_path, ensure_intersect_with=
                 max_value = np.max(black_array_s3)
                 blackpct_s3 = np.count_nonzero(black_array_s3 == max_value) / np.size(black_array_s3)
                 if blackpct_s3 > 0.05:
-                    status = status + 's3black'
-                    comment = comment + f'S3 (likely) black: {int(blackpct_s3 * 100)}%'
+                    tile_inventory.at[tile_index, 'status'] = 'nok'
+                tile_inventory.at[tile_index, 's3black'] = f'{int(blackpct_s3 * 100)}%'
 
-                if status == 'ok':
+                if tile_inventory.at[tile_index, 'status'] == 'ok':
                     ProductIO.writeProduct(tile, os.path.join(output_path, output_tif), 'GeoTIFF')
+                    tile_inventory.at[tile_index, 'filename'] = os.path.join(output_path, output_tif)
                 else:
                     ProductIO.writeProduct(tile, os.path.join(output_path, output_tif + 'x'), 'GeoTIFF')
-                
-                tile_inventory = tile_inventory.append({'pair_index': file_index,
-                                        'tile': TILECODE,
-                                        'size': tilesize,
-                                        'status': status,
-                                        'comment': comment,
-                                        'filename': output_tif}, ignore_index=True)
-                
+                    tile_inventory.at[tile_index, 'filename'] = os.path.join(output_path, output_tif + 'x.tif')
+                                
                 tile.dispose()
-                
+                tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
+
             except Exception as e:
-                tile_inventory = tile_inventory.append({'pair_index': file_index,
-                                        'tile': TILECODE,
-                                        'size': tilesize,
-                                        'status': 'error',
-                                        'comment': str(e)}, ignore_index=True)
+                tile_inventory.at[tile_index, 'status'] = 'error'
+                tile_inventory.at[tile_index, 'status'] = 'str(e)'
+                tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
                 continue
     
     tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
