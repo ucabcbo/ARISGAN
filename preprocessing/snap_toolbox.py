@@ -78,12 +78,17 @@ def nparray(product, bandname):
     return nparray
 
 
-def plot_tile(product, cloudmask=False, figsize=(10,10)):
+def plot_tile(product, satellite, cloudmask=False, figsize=(10,10)):
     # Extract the bands for red, green, and blue
 
-    red_data = toolbox.normalize_numpy(nparray(product, 'B4'))
-    green_data = toolbox.normalize_numpy(nparray(product, 'B3'))
-    blue_data = toolbox.normalize_numpy(nparray(product, 'B2'))
+    if satellite == 's2':
+        red_data = toolbox.normalize_numpy(nparray(product, 'B4'))
+        green_data = toolbox.normalize_numpy(nparray(product, 'B3'))
+        blue_data = toolbox.normalize_numpy(nparray(product, 'B2'))
+    elif satellite == 's3':
+        red_data = toolbox.normalize_numpy(nparray(product, 'Oa17_radiance'))
+        green_data = toolbox.normalize_numpy(nparray(product, 'Oa06_radiance'))
+        blue_data = toolbox.normalize_numpy(nparray(product, 'Oa03_radiance'))
 
     stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
 
@@ -91,31 +96,18 @@ def plot_tile(product, cloudmask=False, figsize=(10,10)):
     plt.imshow(stacked_array)
 
     if cloudmask:
-        cloud_data = ~(nparray(product, 'B_opaque_clouds').astype(int))
-        plt.imshow(cloud_data, alpha=0.3, cmap=cm.gray)
-
-    # fig.axes.get_xaxis().set_visible(False)
-    # fig.axes.get_yaxis().set_visible(False)
-    plt.show()
-
-def plot_s3_tile(product, figsize=(10,10)):
-    # Extract the bands for red, green, and blue
-
-    red_data = toolbox.normalize_numpy(nparray(product, 'Oa17_radiance'))
-    green_data = toolbox.normalize_numpy(nparray(product, 'Oa06_radiance'))
-    blue_data = toolbox.normalize_numpy(nparray(product, 'Oa03_radiance'))
-
-    stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
-
-    plt.figure(figsize=figsize)
-    plt.imshow(stacked_array)
+        try:
+            cloud_data = ~(nparray(product, 'B_opaque_clouds').astype(int))
+            plt.imshow(cloud_data, alpha=0.3, cmap=cm.gray)
+        except:
+            print('cloud band B_opaque_clouds not found')
 
     # fig.axes.get_xaxis().set_visible(False)
     # fig.axes.get_yaxis().set_visible(False)
     plt.show()
 
 
-def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
+def cut_tiles(product, tilesize, file_index, output_path, ensure_intersect_with=[], intersect_threshold=0.95, cloud_threshold=1.0):
     tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'comment', 'filename'])
     tile_inventory = tile_inventory.astype({'pair_index': str,
                         'tile': str,
@@ -124,31 +116,32 @@ def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
                         'comment': str,
                         'filename': str})
 
+    file_index = f'{file_index:05d}'
+
     tile_list = dict()
     quality_list = dict()
 
     # Number of tiles in y direction
-    y_tiles = int(product.getSceneRasterHeight() / TILESIZE)
+    y_tiles = int(product.getSceneRasterHeight() / tilesize)
     # Starting pixel of each tile (i.e.: width from one tile to the next)
     y_step = int(product.getSceneRasterHeight() / y_tiles)
     # Starting offset to center the tiles on the image, i.e. half the distance between the individual tile gaps
-    y_offset = int((product.getSceneRasterHeight() - ((y_tiles-1)*y_step+(TILESIZE-1))) / 2)
+    y_offset = int((product.getSceneRasterHeight() - ((y_tiles-1)*y_step+(tilesize-1))) / 2)
 
     # Number of tiles in x direction
-    x_tiles = int(product.getSceneRasterHeight() / TILESIZE)
+    x_tiles = int(product.getSceneRasterHeight() / tilesize)
     # Starting pixel of each tile (i.e.: width from one tile to the next)
     x_step = int(product.getSceneRasterHeight() / x_tiles)
     # Starting offset to center the tiles on the image, i.e. half the distance between the individual tile gaps
-    x_offset = int((product.getSceneRasterHeight() - ((x_tiles-1)*x_step+(TILESIZE-1))) / 2)
+    x_offset = int((product.getSceneRasterHeight() - ((x_tiles-1)*x_step+(tilesize-1))) / 2)
 
-    TILE_PREFIX = f'{PAIR_INDEX:05d}'
 
     for x in range(x_tiles):
         for y in range(y_tiles):
             TILE_XPOS = x_offset+x*x_step
             TILE_YPOS = y_offset+y*y_step
             TILECODE = f'{TILE_XPOS}x{TILE_YPOS}'
-            output_filename = f'tif{TILESIZE}/{TILE_PREFIX}_{TILECODE}.tif'
+            output_tif = f'tif{tilesize}/{file_index}_{TILECODE}.tif'
             status = 'ok'
             comment = ''
 
@@ -160,54 +153,60 @@ def cut_tiles(product, TILESIZE, PAIR_INDEX, output_path):
             #     print(f'File {output_filename} already exists')
             #     continue
 
-
             try:
-                region = f'{TILE_XPOS},{TILE_YPOS},{TILESIZE},{TILESIZE}'
+                region = f'{TILE_XPOS},{TILE_YPOS},{tilesize},{tilesize}'
                 tile = region_subset(product, region)
 
-                cloud_array = nparray(tile, 'B_opaque_clouds')
-                cloudpct = np.sum(cloud_array) / np.size(cloud_array)
-                if cloudpct > 0.1:
-                    status = 'quality'
-                    comment = f'cloud coverage: {int(cloudpct * 100)}%'
+                if cloud_threshold < 1.0:
+                    cloud_array = nparray(tile, 'B_opaque_clouds')
+                    cloudpct = np.sum(cloud_array) / np.size(cloud_array)
+                    if cloudpct > cloud_threshold:
+                        status = status + 'quality'
+                        comment = comment + f'cloud coverage: {int(cloudpct * 100)}%'
 
-                black_array_s2 = nparray(tile, 'B2')
-                blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
-                if blackpct_s2 > 0.05:
-                    status = 'quality'
-                    comment = f'S2 black: {int(blackpct_s2 * 100)}%'
+                tile_polygon = get_bbox_polygon(tile)
+                for i in range(len(ensure_intersect_with)):
+                    intersect = tile_polygon.intersection(ensure_intersect_with[i]).area / tile_polygon.area
+                    if intersect < intersect_threshold:
+                        status = status + 'intersect'
+                        comment = comment + f'Intersect with item {i}: {int(intersect * 100)}%'
+                        
+                # black_array_s2 = nparray(tile, 'B2')
+                # blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
+                # if blackpct_s2 > 0.05:
+                #     status = 'quality'
+                #     comment = f'S2 black: {int(blackpct_s2 * 100)}%'
 
                 black_array_s3 = nparray(tile, 'Oa17_radiance')
                 max_value = np.max(black_array_s3)
                 blackpct_s3 = np.count_nonzero(black_array_s3 == max_value) / np.size(black_array_s3)
                 if blackpct_s3 > 0.05:
-                    status = 'quality'
-                    comment = f'S3 (likely) black: {int(blackpct_s3 * 100)}%'
+                    status = status + 's3black'
+                    comment = comment + f'S3 (likely) black: {int(blackpct_s3 * 100)}%'
 
                 if status == 'ok':
-                    ProductIO.writeProduct(tile, os.path.join(output_path, output_filename), 'GeoTIFF')
-                    tile_list[TILECODE] = tile
-                elif status == 'quality':
-                    quality_list[TILECODE] = tile
+                    ProductIO.writeProduct(tile, os.path.join(output_path, output_tif), 'GeoTIFF')
+                else:
+                    ProductIO.writeProduct(tile, os.path.join(output_path, output_tif + 'x'), 'GeoTIFF')
                 
-                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
+                tile_inventory = tile_inventory.append({'pair_index': file_index,
                                         'tile': TILECODE,
-                                        'size': TILESIZE,
+                                        'size': tilesize,
                                         'status': status,
                                         'comment': comment,
-                                        'filename': output_filename}, ignore_index=True)
+                                        'filename': output_tif}, ignore_index=True)
                 
                 tile.dispose()
                 
             except Exception as e:
-                tile_inventory = tile_inventory.append({'pair_index': TILE_PREFIX,
+                tile_inventory = tile_inventory.append({'pair_index': file_index,
                                         'tile': TILECODE,
-                                        'size': TILESIZE,
+                                        'size': tilesize,
                                         'status': 'error',
                                         'comment': str(e)}, ignore_index=True)
                 continue
     
-    tile_inventory.to_csv(os.path.join(output_path, f'inventory/{TILE_PREFIX}_{TILESIZE}.csv'), index=False)
+    tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
 
     return tile_list, quality_list
 
@@ -223,24 +222,30 @@ def s2_metadata_cloud_percentage(s2_product):
     return cloud_pct
 
 
-def check_overlap(product_a, product_b):
+def check_overlap(master_product, slave_product, type_master='bbox', type_slave='bbox'):
     
-    polygon_a = get_polygon(product_a)
-    polygon_b = get_polygon(product_b)
+    if type_master[:8] == 'metadata':
+        master_polygon = get_metadata_polygon(master_product, type_master[-2:])
+    else:
+        master_polygon = get_bbox_polygon(master_product)
+
+    if type_slave[:8] == 'metadata':
+        slave_polygon = get_metadata_polygon(slave_product, type_slave[-2:])
+    else:
+        slave_polygon = get_bbox_polygon(slave_product)
     
-    # Define overlap ratio as: S2/S3 intersection area in relation to S2 area
-    intersect = polygon_a.intersection(
-        polygon_b).area / polygon_a.area
+    # Define overlap ratio as: master+slave intersection area in relation to master area
+    intersect = master_polygon.intersection(slave_polygon).area / master_polygon.area
 
     return intersect
 
 
-def get_polygon(product):
+def get_bbox_polygon(product):
     
     # Initialize geocoding
     gc_a = product.getSceneGeoCoding()
 
-    # Get geolocation of pixel (0,0) and pixel (max,max)
+    # Get geolocation of pixels at corner points
     nw = gc_a.getGeoPos(PixelPos(0, 0), None)
     ne = gc_a.getGeoPos(PixelPos(product.getSceneRasterWidth(), 0), None)
     se = gc_a.getGeoPos(PixelPos(product.getSceneRasterWidth(), product.getSceneRasterHeight()), None)
@@ -254,3 +259,33 @@ def get_polygon(product):
     polygon = Polygon(bbox)
 
     return polygon
+
+
+def get_metadata_polygon(product, satellite:str):
+    metadata = product.getMetadataRoot()
+
+    coordinates_list = None
+
+    if satellite == 's2':
+        coordinates_list = str(metadata.getElement('Level-1C_User_Product')
+                            .getElement('Geometric_Info')
+                            .getElement('Product_Footprint')
+                            .getElement('Product_Footprint')
+                            .getElement('Global_Footprint')
+                            .getAttribute('EXT_POS_LIST')
+                            .getData()
+                            .getElemString()).split()
+    elif satellite == 's3':
+        coordinates_list = str(metadata.getElement('Manifest')
+                            .getElement('metadataSection')
+                            .getElement('frameSet')
+                            .getElement('footPrint')
+                            .getAttribute('posList')
+                            .getData()
+                            .getElemString()).split()
+
+    if coordinates_list is None:
+        return None
+    
+    coordinates = [(float(coordinates_list[i]), float(coordinates_list[i+1])) for i in range(0, len(coordinates_list), 2)]
+    return Polygon(coordinates)
