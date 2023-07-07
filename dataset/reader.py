@@ -18,7 +18,7 @@ class Reader():
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
         if self.SHUFFLE:
-            train_dataset = train_dataset.shuffle(BUFFER_SIZE)
+            train_dataset = train_dataset.shuffle(min(BUFFER_SIZE, 2500))
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 
@@ -54,15 +54,6 @@ class Reader():
         
         return cropped_image[:,:,:3], cropped_image[:,:,3:]
         # return resize(input_image, real_image, IMG_HEIGHT, IMG_WIDTH)
-
-
-    # # Normalizing the images to [-1, 1]
-    # def normalize(input_image, real_image):
-    #   # TODO: reflect which normalization is needed... divide by 1024????
-    #   input_image = (input_image / 127.5) - 1
-    #   real_image = (real_image / 127.5) - 1
-
-    #   return input_image, real_image
 
 
     @tf.function()
