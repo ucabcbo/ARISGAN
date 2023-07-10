@@ -28,7 +28,9 @@ print(f'Arguments read: {a}')
 
 assert a.model in ['psgan',
                    'pix2pix',
-                   'pix2pix_psganloss']
+                   'pix2pix_psganloss',
+                   'pix2pix_mse',
+                   'psgan_mse']
 ### End arguments
 
 import os
@@ -74,7 +76,7 @@ import datetime
 
 import sis_toolbox as toolbox
 
-from models import pix2pix, psgan, pix2pix_psganloss
+from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -136,6 +138,10 @@ elif a.model == 'psgan':
     model = psgan.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 elif a.model == 'pix2pix_psganloss':
     model = pix2pix_psganloss.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+elif a.model == 'pix2pix_mse':
+    model = pix2pix_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+elif a.model == 'psgan_mse':
+    model = psgan_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 
 shuffle = False if a.shuffle == 'n' else True
 dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, BUFFER_SIZE, a.batch_size, shuffle)
