@@ -24,6 +24,9 @@ DATA_ROOT = config['data_root']
 OUTPUT_ROOT = config['output_root']
 
 TILESIZE = config['tilesize']
+IMG_WIDTH = config['img_width']
+IMG_HEIGHT = config['img_height']
+
 TRAIN_DIR = os.path.join(DATA_ROOT, f'tfrecords{TILESIZE}/')
 VAL_DIR = os.path.join(DATA_ROOT, f'tfrecords{TILESIZE}_val/')
 

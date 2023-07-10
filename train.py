@@ -2,9 +2,6 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", required=True, help="tbd")
-parser.add_argument("--tilesize", type=int, help="tbd", default=256)
-parser.add_argument("--img_width", type=int, help="tbd", default=256)
-parser.add_argument("--img_height", type=int, help="tbd", default=256)
 parser.add_argument("--batch_size", type=int, help="tbd", default=1)
 parser.add_argument("--lmbda", type=int, help="tbd", default=100)
 parser.add_argument("--progress_freq", type=int, default=1000, help="display progress every n steps")
@@ -38,16 +35,19 @@ import os
 pid = os.getpid()
 print("PID:", pid)
 
-with open('env.txt') as f:
-    ENVIRONMENT = f.readlines()[0][:-1]
-print(f'running on environment: "{ENVIRONMENT}"')
-assert ENVIRONMENT in ['blaze',
+import sys
+import os
+sys.path.append(os.getcwd())
+import init
+
+print(f'running on environment: "{init.ENVIRONMENT}"')
+assert init.ENVIRONMENT in ['blaze',
                        'colab',
                        'local',
                        'cpom']
 
 
-if ENVIRONMENT == 'blaze':
+if init.ENVIRONMENT == 'blaze':
     import subprocess
 
     command = 'source /usr/local/cuda/CUDA_VISIBILITY.csh'
@@ -101,53 +101,37 @@ with tf.compat.v1.Session() as sess:
         print('TensorFlow is not using GPU')
 ### End GPU checks
 
-
-INPUT_CHANNELS = 21
-OUTPUT_CHANNELS = 3
-STARTTIME = datetime.datetime.now().strftime('%m%d-%H%M')
-
-if ENVIRONMENT == 'blaze':
-    path_prefix = '/cs/student/msc/aisd/2022/cboehm/projects/li1_data/'
-elif ENVIRONMENT == 'colab':
-    path_prefix = f'/content/drive/MyDrive/sis2/data/'
-elif ENVIRONMENT == 'local':
-    path_prefix = f'/Users/christianboehm/projects/sis2/data/'
-elif ENVIRONMENT == 'cpom':
-    path_prefix = f'/home/cb/sis2/data/'
-else:
-    path_prefix = f'~/projects/sis2/data'
-
-path_train = os.path.join(path_prefix, f'tfrecords{a.tilesize}/')
-path_val = os.path.join(path_prefix, f'tfrecords{a.tilesize}_val/')
-
-path_subfolder = f'{STARTTIME}_{a.model}_{a.batch_size}x{a.tilesize}'
+path_subfolder = f'{init.TIMESTAMP}_{a.model}_{a.batch_size}x{init.TILESIZE}'
 if a.suffix is not None:
     path_subfolder += f'_{a.suffix}'
-path_log = os.path.join(path_prefix, f'logs/{path_subfolder}/')
-path_ckpt = os.path.join(path_prefix, f'checkpoints/{path_subfolder}/')
-path_imgs = os.path.join(path_prefix, f'images/{path_subfolder}/')
+path_log = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/logs/')
+path_ckpt = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/ckpt/')
+path_imgs = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/samples/')
 os.makedirs(path_log, exist_ok=True)
 os.makedirs(path_ckpt, exist_ok=True)
 os.makedirs(path_imgs, exist_ok=True)
 
 # The training set consist of n images
-BUFFER_SIZE = len(glob.glob(os.path.join(path_train, '*')))
+BUFFER_SIZE = len(glob.glob(os.path.join(init.TRAIN_DIR, '*')))
 
 if a.model == 'pix2pix':
-    model = pix2pix.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'psgan':
-    model = psgan.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = psgan.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'pix2pix_psganloss':
-    model = pix2pix_psganloss.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = pix2pix_psganloss.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'pix2pix_mse':
-    model = pix2pix_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = pix2pix_mse.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'psgan_mse':
-    model = psgan_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = psgan_mse.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'pix2pix_vgg':
-    model = pix2pix_vgg.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+    model = pix2pix_vgg.Model(a.lmbda, path_log, path_ckpt)
+else:
+    model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
+
 
 shuffle = False if a.shuffle == 'n' else True
-dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, a.batch_size, shuffle, 'train.py')
+dataset_reader = Reader(a.batch_size, shuffle, 'train.py')
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
@@ -166,14 +150,14 @@ def fit(train_ds, test_ds, steps):
     example_targets = tf.stack(example_targets, axis=0)
 
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if (step) % a.progress_freq == 0:
+        if step == 0 or (step + 1) % a.progress_freq == 0:
             # display.clear_output(wait=True)
             
             if step != 0:
                 print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=init.TIMESTAMP, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
@@ -187,6 +171,7 @@ def fit(train_ds, test_ds, steps):
 
         # Save (checkpoint) the model every 5k steps
         if (step + 1) % a.save_freq == 0:
+            print(f'Step + 1 = {step + 1} - saving checkpoint')
             model.save()
 
 fit(train_dataset, test_dataset, steps=40000)

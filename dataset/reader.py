@@ -9,13 +9,10 @@ import sis_toolbox as tbx
 
 class Reader():
 
-    def __init__(self, TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BATCH_SIZE, SHUFFLE, caller, random_sample_size=None):
-        self.TILESIZE = TILESIZE
-        self.IMG_HEIGHT = IMG_HEIGHT
-        self.IMG_WIDTH = IMG_WIDTH
+    def __init__(self, BATCH_SIZE, SHUFFLE, caller, random_sample_size=None):
         self.SHUFFLE = SHUFFLE
 
-        train_file_list = [os.path.join(PATH_TRAIN, file) for file in os.listdir(PATH_TRAIN) if file.endswith('.tfrecord')]
+        train_file_list = [os.path.join(init.TRAIN_DIR, file) for file in os.listdir(init.TRAIN_DIR) if file.endswith('.tfrecord')]
         print(f'datamodel.Reader called by {caller}')
         if random_sample_size is not None:
             import random
@@ -33,7 +30,7 @@ class Reader():
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 
-        test_file_list = [os.path.join(PATH_VAL, file) for file in os.listdir(PATH_VAL) if file.endswith('.tfrecord')]
+        test_file_list = [os.path.join(init.VAL_DIR, file) for file in os.listdir(init.VAL_DIR) if file.endswith('.tfrecord')]
         try:
             test_dataset = tf.data.TFRecordDataset(test_file_list)
         except tf.errors.InvalidArgumentError:
@@ -65,7 +62,7 @@ class Reader():
 
     def random_crop(self, s2_image, s3_image):
         stacked_image = tf.concat([s2_image, s3_image], axis=2)
-        cropped_image = tf.image.random_crop(stacked_image, size=[self.IMG_HEIGHT, self.IMG_WIDTH, 24])
+        cropped_image = tf.image.random_crop(stacked_image, size=[init.IMG_HEIGHT, init.IMG_WIDTH, 24])
         
         return cropped_image[:,:,:3], cropped_image[:,:,3:]
         # return resize(input_image, real_image, IMG_HEIGHT, IMG_WIDTH)
@@ -74,7 +71,7 @@ class Reader():
     @tf.function()
     def random_jitter(self, s2_image, s3_image):
         # Resizing to 286x286
-        s2_image, s3_image = self.resize(s2_image, s3_image, int(self.IMG_HEIGHT * 1.11), int(self.IMG_WIDTH * 1.11))
+        s2_image, s3_image = self.resize(s2_image, s3_image, int(init.IMG_HEIGHT * 1.11), int(init.IMG_WIDTH * 1.11))
         
         # Random cropping back to 256x256
         s2_image, s3_image = self.random_crop(s2_image, s3_image)
@@ -88,8 +85,8 @@ class Reader():
 
 
     def load_image_train(self, tfrecord):
-        s2_image, s3_image = tbx.parse_tfrecord(tfrecord, self.TILESIZE)
-        s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
+        s2_image, s3_image = tbx.parse_tfrecord(tfrecord, init.TILESIZE)
+        s2_image, s3_image = self.resize(s2_image, s3_image, init.IMG_HEIGHT, init.IMG_WIDTH)
         s2_image, s3_image = self.random_jitter(s2_image, s3_image)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
         
@@ -97,8 +94,8 @@ class Reader():
 
 
     def load_image_test(self, image_file):
-        s2_image, s3_image = tbx.parse_tfrecord(image_file, self.TILESIZE)
-        s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
+        s2_image, s3_image = tbx.parse_tfrecord(image_file, init.TILESIZE)
+        s2_image, s3_image = self.resize(s2_image, s3_image, init.IMG_HEIGHT, init.IMG_WIDTH)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
         
         return s2_image, s3_image

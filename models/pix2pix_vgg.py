@@ -8,18 +8,14 @@ from tensorflow.keras.models import Model as KerasModel
 
 class Model:
     
-    def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT):
+    def __init__(self, LAMBDA, PATH_LOGS, PATH_CKPT):
         self.name = 'pix2pix_vgg'
-        self.IMG_WIDTH = IMG_WIDTH
-        self.IMG_HEIGHT = IMG_HEIGHT
-        self.INPUT_CHANNELS = INPUT_CHANNELS
-        self.OUTPUT_CHANNELS = OUTPUT_CHANNELS
         self.LAMBDA = LAMBDA
 
-        self.generator = Model.Generator(IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS)
-        self.discriminator = Model.Discriminator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS)
+        self.generator = Model.Generator()
+        self.discriminator = Model.Discriminator()
 
-        self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1420')
+        self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1612_b16_e10')
         self.VGG.summary()
         # Set the desired layers for computing features
         feature_layers = ['block3_conv3', 'block4_conv3', 'block5_conv3']
@@ -83,9 +79,9 @@ class Model:
         return result
 
 
-    def Generator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS):
+    def Generator():
         
-        inputs = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS])
+        inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 21])
         
         down_stack = [
             Model.downsample(64, 4, apply_batchnorm=False),  # (batch_size, 128, 128, 64)
@@ -110,7 +106,7 @@ class Model:
 
         initializer = tf.random_normal_initializer(0., 0.02)
         last = tf.keras.layers.Conv2DTranspose(
-            OUTPUT_CHANNELS, 4,
+            3, 4,
             strides=2,
             padding='same',
             kernel_initializer=initializer,
@@ -136,11 +132,11 @@ class Model:
         return tf.keras.Model(inputs=inputs, outputs=x)
         
 
-    def Discriminator(IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS, OUTPUT_CHANNELS):
+    def Discriminator():
         initializer = tf.random_normal_initializer(0., 0.02)
 
-        inp = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, INPUT_CHANNELS], name='input_image')
-        tar = tf.keras.layers.Input(shape=[IMG_HEIGHT, IMG_WIDTH, OUTPUT_CHANNELS], name='target_image')
+        inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 21], name='input_image')
+        tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 3], name='target_image')
 
         x = tf.keras.layers.concatenate([inp, tar])  # (batch_size, 256, 256, channels*2)
 

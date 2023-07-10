@@ -3,6 +3,7 @@ data/
 output/
 training_checkpoints/
 nohup/
+vgg/ckpt/
 
 # snap-created directory on cpom:
 ?/
