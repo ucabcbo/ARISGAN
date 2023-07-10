@@ -6,7 +6,7 @@ class Model:
     
     def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT):
 
-        self.name = 'psgan'
+        self.name = 'psgan_mse'
 
         self.IMG_WIDTH = IMG_WIDTH
         self.IMG_HEIGHT = IMG_HEIGHT

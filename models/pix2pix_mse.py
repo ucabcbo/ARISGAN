@@ -5,7 +5,7 @@ import os
 class Model:
     
     def __init__(self, IMG_WIDTH, IMG_HEIGHT, INPUT_CHANNELS, OUTPUT_CHANNELS, LAMBDA, PATH_LOGS, PATH_CKPT):
-        self.name = 'pix2pix'
+        self.name = 'pix2pix_mse'
         self.IMG_WIDTH = IMG_WIDTH
         self.IMG_HEIGHT = IMG_HEIGHT
         self.INPUT_CHANNELS = INPUT_CHANNELS

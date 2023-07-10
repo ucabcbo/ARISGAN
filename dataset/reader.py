@@ -1,24 +1,35 @@
 
+import sys
 import os
+sys.path.append(os.getcwd())
+import init
+
 import tensorflow as tf
 import sis_toolbox as tbx
 
 class Reader():
 
-    def __init__(self, TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BUFFER_SIZE, BATCH_SIZE, SHUFFLE):
+    def __init__(self, TILESIZE, IMG_HEIGHT, IMG_WIDTH, PATH_TRAIN, PATH_VAL, BATCH_SIZE, SHUFFLE, caller, random_sample_size=None):
         self.TILESIZE = TILESIZE
         self.IMG_HEIGHT = IMG_HEIGHT
         self.IMG_WIDTH = IMG_WIDTH
         self.SHUFFLE = SHUFFLE
 
         train_file_list = [os.path.join(PATH_TRAIN, file) for file in os.listdir(PATH_TRAIN) if file.endswith('.tfrecord')]
+        print(f'datamodel.Reader called by {caller}')
+        if random_sample_size is not None:
+            import random
+            train_file_list = random.sample(train_file_list, random_sample_size)
+            print(f'selected random sample: {len(train_file_list)}')
         train_dataset = tf.data.TFRecordDataset(train_file_list)
+
+        self.BUFFER_SIZE = len(train_file_list)
 
         # train_dataset = tf.data.Dataset.list_files(str(f'{PATH_TRAIN}/*.tfrecords'))
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
         if self.SHUFFLE:
-            train_dataset = train_dataset.shuffle(min(BUFFER_SIZE, 2500))
+            train_dataset = train_dataset.shuffle(min(self.BUFFER_SIZE, 2500))
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 
@@ -33,6 +44,10 @@ class Reader():
             # test_dataset = test_dataset.shuffle(BUFFER_SIZE)
         test_dataset = test_dataset.batch(BATCH_SIZE)
         self.test_dataset = test_dataset
+
+    
+    def __len__(self):
+        return self.BUFFER_SIZE
 
 
     def normalize_tensor(self, input_image, real_image):

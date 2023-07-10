@@ -5,7 +5,7 @@ parser.add_argument("--model", required=True, help="tbd")
 parser.add_argument("--tilesize", type=int, help="tbd", default=256)
 parser.add_argument("--img_width", type=int, help="tbd", default=256)
 parser.add_argument("--img_height", type=int, help="tbd", default=256)
-parser.add_argument("--batch_size", type=int, help="tbd", default=16)
+parser.add_argument("--batch_size", type=int, help="tbd", default=1)
 parser.add_argument("--lmbda", type=int, help="tbd", default=100)
 parser.add_argument("--progress_freq", type=int, default=1000, help="display progress every n steps")
 parser.add_argument("--save_freq", type=int, default=5000, help="save model every n steps")
@@ -30,7 +30,8 @@ assert a.model in ['psgan',
                    'pix2pix',
                    'pix2pix_psganloss',
                    'pix2pix_mse',
-                   'psgan_mse']
+                   'psgan_mse',
+                   'pix2pix_vgg']
 ### End arguments
 
 import os
@@ -76,7 +77,7 @@ import datetime
 
 import sis_toolbox as tbx
 
-from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse
+from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -142,9 +143,11 @@ elif a.model == 'pix2pix_mse':
     model = pix2pix_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 elif a.model == 'psgan_mse':
     model = psgan_mse.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
+elif a.model == 'pix2pix_vgg':
+    model = pix2pix_vgg.Model(a.img_width, a.img_height, INPUT_CHANNELS, OUTPUT_CHANNELS, a.lmbda, path_log, path_ckpt)
 
 shuffle = False if a.shuffle == 'n' else True
-dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, BUFFER_SIZE, a.batch_size, shuffle)
+dataset_reader = Reader(a.tilesize, a.img_width, a.img_height, path_train, path_val, a.batch_size, shuffle, 'train.py')
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
