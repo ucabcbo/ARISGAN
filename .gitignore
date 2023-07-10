@@ -1,7 +1,6 @@
-env.txt
+env.*
 data/
-logs_5e/
-venvtf2/
+output/
 training_checkpoints/
 nohup/
 

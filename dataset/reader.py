@@ -1,7 +1,7 @@
 
 import os
 import tensorflow as tf
-import sis_toolbox as toolbox
+import sis_toolbox as tbx
 
 class Reader():
 
@@ -73,7 +73,7 @@ class Reader():
 
 
     def load_image_train(self, tfrecord):
-        s2_image, s3_image = toolbox.parse_tfrecord(tfrecord, self.TILESIZE)
+        s2_image, s3_image = tbx.parse_tfrecord(tfrecord, self.TILESIZE)
         s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
         s2_image, s3_image = self.random_jitter(s2_image, s3_image)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
@@ -82,7 +82,7 @@ class Reader():
 
 
     def load_image_test(self, image_file):
-        s2_image, s3_image = toolbox.parse_tfrecord(image_file, self.TILESIZE)
+        s2_image, s3_image = tbx.parse_tfrecord(image_file, self.TILESIZE)
         s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
         

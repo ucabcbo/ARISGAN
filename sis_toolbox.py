@@ -18,6 +18,7 @@ tensor_bandoffset = {RGBProfile.S2.name: -1,
                      RGBProfile.S3.name: -1,
                      RGBProfile.S3_TRISTIMULUS.name: -1}
 
+
 def plot_tiff(raw_tiff, rgbprofile, ax=None):
 
     bands = rgbprofile.value
@@ -43,6 +44,53 @@ def plot_tiff(raw_tiff, rgbprofile, ax=None):
     else:
         ax.imshow(rgb_image)
         ax.axis('off')
+
+
+def plot_tiff(raw_tiff, rgbprofile, ax=None):
+
+    bands = rgbprofile.value
+    bands = [item + tiff_bandoffset[rgbprofile.name] for item in bands]
+
+    import numpy as np
+    from matplotlib import pyplot as plt
+
+    red_band = normalize_numpy(raw_tiff.read(bands[0]))
+    green_band = normalize_numpy(raw_tiff.read(bands[1]))
+    blue_band = normalize_numpy(raw_tiff.read(bands[2]))
+
+    # Stack the bands to create the RGB image
+    # rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
+    rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
+
+    # Display the RGB image
+    if ax is None:
+        plt.figure(figsize=(10,10))
+        plt.imshow(rgb_image)
+        plt.axis('off')
+        plt.show()
+    else:
+        ax.imshow(rgb_image)
+        ax.axis('off')
+
+
+def plot_tiff_channel(raw_tiff, channel:int, ax=None):
+
+    import numpy as np
+    from matplotlib import pyplot as plt
+
+    channel = normalize_numpy(raw_tiff.read(channel))
+
+    # Display the RGB image
+    if ax is None:
+        plt.figure(figsize=(10,10))
+        plt.imshow(channel, cmap='gray')
+        plt.axis('off')
+        plt.show()
+    else:
+        ax.imshow(channel, cmap='gray')
+        ax.axis('off')
+
+
 
 def plot_tiff_sbs(raw_tiff, left_rgbprofile=RGBProfile.S2, right_rgbprofile=RGBProfile.S3, title=None):
     from matplotlib import pyplot as plt
@@ -88,6 +136,7 @@ def plot_tensor(tensor, rgbprofile, ax=None):
         ax.imshow(rgb_image)
         ax.axis('off')
 
+
 def plot_tensor_sbs(tensor, tilesize, s3_rgbprofile=RGBProfile.S3, title=None):
     from matplotlib import pyplot as plt
 
@@ -102,6 +151,7 @@ def plot_tensor_sbs(tensor, tilesize, s3_rgbprofile=RGBProfile.S3, title=None):
     ax[1].set_title('Sentinel-3')
     plt.tight_layout()
     plt.show()
+
 
 def save_tfrecord(raw_tiff, filepath):
     import numpy as np
