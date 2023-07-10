@@ -74,7 +74,7 @@ import glob
 import time
 import datetime
 
-import sis_toolbox as toolbox
+import sis_toolbox as tbx
 
 from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse
 from dataset.reader import Reader
@@ -170,7 +170,7 @@ def fit(train_ds, test_ds, steps):
                 print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
             
-            toolbox.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
