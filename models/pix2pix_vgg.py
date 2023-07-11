@@ -15,7 +15,8 @@ class Model:
         self.generator = Model.Generator()
         self.discriminator = Model.Discriminator()
 
-        self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1612_b16_e10')
+        # self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1612_b16_e10')
+        self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1630_b1_e10')
         self.VGG.summary()
         # Set the desired layers for computing features
         feature_layers = ['block3_conv3', 'block4_conv3', 'block5_conv3']
@@ -172,15 +173,15 @@ class Model:
         return total_gen_loss, gan_loss, l1_loss, rmse_loss
 
 
-    def stylegan_loss(self, gen_output, target, vgg_features):
+    def gen_stylegan_loss(self, gen_output, target):
         # Compute perceptual loss (L1 distance between VGG features)
-        perceptual_loss = tf.reduce_mean(tf.abs(vgg_features(target) - vgg_features(gen_output)))
+        perceptual_loss = tf.reduce_mean(tf.abs(self.vgg_features(target) - self.vgg_features(gen_output)))
 
         # Compute pixel-wise L1 loss
         l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
 
         # Compute StyleGAN loss
-        stylegan_loss = perceptual_loss + 0.01 * l1_loss
+        stylegan_loss = 0.5 * perceptual_loss + l1_loss
 
         return stylegan_loss, perceptual_loss, l1_loss
 
@@ -191,6 +192,28 @@ class Model:
         generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
         total_disc_loss = real_loss + generated_loss
         return total_disc_loss
+
+
+    def disc_stylegan_loss(self, disc_real_output, disc_generated_output):
+        loss_object = self.loss_object
+        real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
+        generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
+
+        dro_resized = tf.image.resize(disc_real_output, (256, 256))
+        dro_reshaped = tf.tile(dro_resized, [1, 1, 1, 3])        
+
+        dgo_resized = tf.image.resize(disc_real_output, (256, 256))
+        dgo_reshaped = tf.tile(dgo_resized, [1, 1, 1, 3])        
+
+        # Compute perceptual loss (L1 distance between VGG features)
+        perceptual_loss = tf.reduce_mean(tf.abs(self.vgg_features(dro_reshaped) - self.vgg_features(dgo_reshaped)))
+
+        # Scale the perceptual loss to balance with other losses
+        scaled_perceptual_loss = 0.5 * perceptual_loss
+        
+        # Combine the losses
+        total_disc_loss = real_loss + generated_loss + scaled_perceptual_loss
+        return total_disc_loss        
 
 
     @tf.function
@@ -205,8 +228,9 @@ class Model:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            stylegan_loss_value, perceptual_loss, l1_loss = self.stylegan_loss(gen_output, target, self.vgg_features)
+            stylegan_loss_value, perceptual_loss, l1_loss = self.gen_stylegan_loss(gen_output, target)
             # gen_total_loss, gen_gan_loss, gen_l1_loss, gen_rmse_loss = self.generator_loss(disc_generated_output, gen_output, target)
+            # disc_loss = self.disc_stylegan_loss(disc_real_output, disc_generated_output)
             disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
 
         generator_gradients = gen_tape.gradient(stylegan_loss_value,

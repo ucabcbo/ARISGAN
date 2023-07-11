@@ -28,7 +28,8 @@ assert a.model in ['psgan',
                    'pix2pix_psganloss',
                    'pix2pix_mse',
                    'psgan_mse',
-                   'pix2pix_vgg']
+                   'pix2pix_vgg',
+                   'psgan_vgg']
 ### End arguments
 
 import os
@@ -77,7 +78,7 @@ import datetime
 
 import sis_toolbox as tbx
 
-from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg
+from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg, psgan_vgg
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -126,12 +127,14 @@ elif a.model == 'psgan_mse':
     model = psgan_mse.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'pix2pix_vgg':
     model = pix2pix_vgg.Model(a.lmbda, path_log, path_ckpt)
+elif a.model == 'psgan_vgg':
+    model = psgan_vgg.Model(path_log, path_ckpt)
 else:
     model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
 
 
 shuffle = False if a.shuffle == 'n' else True
-dataset_reader = Reader(a.batch_size, shuffle, 'train.py')
+dataset_reader = Reader(a.batch_size, shuffle, 'train.py', 25000)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
@@ -150,7 +153,7 @@ def fit(train_ds, test_ds, steps):
     example_targets = tf.stack(example_targets, axis=0)
 
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if step == 0 or (step + 1) % a.progress_freq == 0:
+        if step % a.progress_freq == 0:
             # display.clear_output(wait=True)
             
             if step != 0:
