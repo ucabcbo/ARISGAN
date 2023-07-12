@@ -4,23 +4,31 @@ sys.path.append(os.getcwd())
 import init
 
 import tensorflow as tf
-import datetime
+from tensorflow.keras.models import Model as KerasModel
 
 class Model:
     
     def __init__(self, LAMBDA, PATH_LOGS, PATH_CKPT):
-        self.name = 'pix2pix'
+        self.name = 'pix2pix_wstein'
         self.LAMBDA = LAMBDA
 
         self.generator = Model.Generator()
         self.discriminator = Model.Discriminator()
 
-        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        # self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1612_b16_e10')
+        self.VGG = tf.keras.models.load_model('vgg/ckpt/VGG_0710-1630_b1_e10')
+        self.VGG.summary()
+        # Set the desired layers for computing features
+        feature_layers = ['block3_conv3', 'block4_conv3', 'block5_conv3']
+        # Create a new model with selected feature layers as outputs
+        self.vgg_features_model = KerasModel(inputs=self.VGG.input, outputs=[self.VGG.get_layer(layer).output for layer in feature_layers])
+
+        self.loss_object = tf.keras.losses.BinaryCrossentropy()
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
-        self.summary_writer = tf.summary.create_file_writer(PATH_LOGS + f'{self.name}_fit/' + init.TIMESTAMP)
+        self.summary_writer = tf.summary.create_file_writer(PATH_LOGS + f'{self.name}_fit/{init.TIMESTAMP}')
 
         self.checkpoint_prefix = os.path.join(PATH_CKPT, f'{self.name}_ckpt')
         self.checkpoint = tf.train.Checkpoint(
@@ -98,7 +106,6 @@ class Model:
         ]
 
         initializer = tf.random_normal_initializer(0., 0.02)
-        # First "3" is for output channels
         last = tf.keras.layers.Conv2DTranspose(
             3, 4,
             strides=2,
@@ -158,12 +165,30 @@ class Model:
     
 
     def generator_loss(self, disc_generated_output, gen_output, target):
-        loss_object = self.loss_object
-        gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
+        # loss_object = self.loss_object
+        # gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
+        # l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
+        # rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
+        # total_gen_loss = l1_loss + (self.LAMBDA * rmse_loss)
+
+        gen_loss_GAN = -tf.reduce_mean(disc_generated_output)
+        gen_loss_L1 = tf.reduce_mean(tf.abs(target - gen_output))
+        total_gen_loss = gen_loss_GAN * 1 + gen_loss_L1 * 10
+
+        return total_gen_loss, gen_loss_GAN, gen_loss_L1
+
+
+    def gen_stylegan_loss(self, gen_output, target):
+        # Compute perceptual loss (L1 distance between VGG features)
+        perceptual_loss = tf.reduce_mean(tf.abs(self.vgg_features(target) - self.vgg_features(gen_output)))
+
+        # Compute pixel-wise L1 loss
         l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
-        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
-        total_gen_loss = gan_loss + (self.LAMBDA * l1_loss)
-        return total_gen_loss, gan_loss, l1_loss, rmse_loss
+
+        # Compute StyleGAN loss
+        stylegan_loss = 0.5 * perceptual_loss + l1_loss
+
+        return stylegan_loss, perceptual_loss, l1_loss
 
 
     def discriminator_loss(self, disc_real_output, disc_generated_output):
@@ -172,6 +197,28 @@ class Model:
         generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
         total_disc_loss = real_loss + generated_loss
         return total_disc_loss
+
+
+    def disc_stylegan_loss(self, disc_real_output, disc_generated_output):
+        loss_object = self.loss_object
+        real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
+        generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
+
+        dro_resized = tf.image.resize(disc_real_output, (256, 256))
+        dro_reshaped = tf.tile(dro_resized, [1, 1, 1, 3])        
+
+        dgo_resized = tf.image.resize(disc_real_output, (256, 256))
+        dgo_reshaped = tf.tile(dgo_resized, [1, 1, 1, 3])        
+
+        # Compute perceptual loss (L1 distance between VGG features)
+        perceptual_loss = tf.reduce_mean(tf.abs(self.vgg_features(dro_reshaped) - self.vgg_features(dgo_reshaped)))
+
+        # Scale the perceptual loss to balance with other losses
+        scaled_perceptual_loss = 0.5 * perceptual_loss
+        
+        # Combine the losses
+        total_disc_loss = real_loss + generated_loss + scaled_perceptual_loss
+        return total_disc_loss        
 
 
     @tf.function
@@ -186,10 +233,12 @@ class Model:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            gen_total_loss, gen_gan_loss, gen_l1_loss, gen_rmse_loss = self.generator_loss(disc_generated_output, gen_output, target)
+            total_gen_loss, gen_loss_GAN, gen_loss_L1 = self.generator_loss(disc_generated_output, gen_output, target)
+            # gen_total_loss, gen_gan_loss, gen_l1_loss, gen_rmse_loss = self.generator_loss(disc_generated_output, gen_output, target)
+            # disc_loss = self.disc_stylegan_loss(disc_real_output, disc_generated_output)
             disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
 
-        generator_gradients = gen_tape.gradient(gen_total_loss,
+        generator_gradients = gen_tape.gradient(total_gen_loss,
                                                 generator.trainable_variables)
         discriminator_gradients = disc_tape.gradient(disc_loss,
                                                     discriminator.trainable_variables)
@@ -200,13 +249,32 @@ class Model:
                                                     discriminator.trainable_variables))
 
         with summary_writer.as_default():
-            tf.summary.scalar('gen_total_loss', gen_total_loss, step=step//1000)
-            tf.summary.scalar('gen_gan_loss', gen_gan_loss, step=step//1000)
-            tf.summary.scalar('gen_l1_loss', gen_l1_loss, step=step//1000)
-            tf.summary.scalar('gen_rmse_loss', gen_rmse_loss, step=step//1000)
+            tf.summary.scalar('total_gen_loss', total_gen_loss, step=step//1000)
+            tf.summary.scalar('gen_loss_GAN', gen_loss_GAN, step=step//1000)
+            tf.summary.scalar('gen_loss_L1', gen_loss_L1, step=step//1000)
             tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
     
 
     def save(self):
         self.checkpoint.save(file_prefix=self.checkpoint_prefix)
 
+
+    def vgg_features(self, input_tensor):
+
+        # # Preprocess the input tensor for VGG-19
+        # preprocessed_input = tf.keras.applications.vgg19.preprocess_input(input_tensor)
+
+        # Compute VGG features for the preprocessed input
+        vgg_features_output = self.vgg_features_model(input_tensor)
+
+        # Resize the feature maps to have the same spatial dimensions
+        resized_features = []
+        target_shape = vgg_features_output[0].shape[1:3]  # Get the spatial dimensions of the first feature map
+        for feature_map in vgg_features_output:
+            resized_feature = tf.image.resize(feature_map, target_shape, method='bilinear')
+            resized_features.append(resized_feature)
+
+        # Concatenate the resized feature maps into a single tensor
+        combined_features = tf.concat(resized_features, axis=-1)
+
+        return combined_features

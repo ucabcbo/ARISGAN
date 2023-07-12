@@ -38,7 +38,7 @@ image_width = init.TILESIZE
 batch_size = 1
 epochs = 10
 
-# Custom data generator for loading TIFF images
+# Custom data generator for loading TFRECORDS
 class DataGenerator(tf.keras.utils.Sequence):
     def __init__(self, image_height, image_width, batch_size):
         self.image_height = image_height

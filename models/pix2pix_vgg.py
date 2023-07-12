@@ -23,7 +23,7 @@ class Model:
         # Create a new model with selected feature layers as outputs
         self.vgg_features_model = KerasModel(inputs=self.VGG.input, outputs=[self.VGG.get_layer(layer).output for layer in feature_layers])
 
-        self.loss_object = tf.keras.losses.MeanSquaredError()
+        self.loss_object = tf.keras.losses.BinaryCrossentropy()
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)

@@ -29,7 +29,8 @@ assert a.model in ['psgan',
                    'pix2pix_mse',
                    'psgan_mse',
                    'pix2pix_vgg',
-                   'psgan_vgg']
+                   'psgan_vgg',
+                   'pix2pix_wstein']
 ### End arguments
 
 import os
@@ -78,7 +79,7 @@ import datetime
 
 import sis_toolbox as tbx
 
-from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg, psgan_vgg
+from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg, psgan_vgg, pix2pix_wstein
 from dataset.reader import Reader
 
 ### GPU checks only
@@ -108,9 +109,11 @@ if a.suffix is not None:
 path_log = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/logs/')
 path_ckpt = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/ckpt/')
 path_imgs = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/samples/')
+path_model = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/model/')
 os.makedirs(path_log, exist_ok=True)
 os.makedirs(path_ckpt, exist_ok=True)
 os.makedirs(path_imgs, exist_ok=True)
+os.makedirs(path_model, exist_ok=True)
 
 # The training set consist of n images
 BUFFER_SIZE = len(glob.glob(os.path.join(init.TRAIN_DIR, '*')))
@@ -129,6 +132,8 @@ elif a.model == 'pix2pix_vgg':
     model = pix2pix_vgg.Model(a.lmbda, path_log, path_ckpt)
 elif a.model == 'psgan_vgg':
     model = psgan_vgg.Model(path_log, path_ckpt)
+elif a.model == 'pix2pix_wstein':
+    model = pix2pix_wstein.Model(a.lmbda, path_log, path_ckpt)
 else:
     model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
 

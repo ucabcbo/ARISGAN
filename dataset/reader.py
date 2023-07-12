@@ -36,9 +36,6 @@ class Reader():
         except tf.errors.InvalidArgumentError:
             test_dataset = tf.data.TFRecordDataset(train_file_list)
         test_dataset = test_dataset.map(self.load_image_test)
-        #TODO: check if shuffling is helpful (added for validation)
-        # if self.SHUFFLE:
-            # test_dataset = test_dataset.shuffle(BUFFER_SIZE)
         test_dataset = test_dataset.batch(BATCH_SIZE)
         self.test_dataset = test_dataset
 
