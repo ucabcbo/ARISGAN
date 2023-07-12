@@ -17,6 +17,8 @@ class GAN:
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
         self.summary_writer = tf.summary.create_file_writer(PATH_LOGS)
 
@@ -99,8 +101,6 @@ class GAN:
     
 
     def generator_loss(self, disc_generated_output, gen_output, target):
-        if self.loss_object is None:
-            self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
         LMBDA = 100
 
@@ -119,8 +119,6 @@ class GAN:
 
 
     def discriminator_loss(self, disc_real_output, disc_generated_output):
-        if self.loss_object is None:
-            self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
         real_loss = self.loss_object(tf.ones_like(disc_real_output), disc_real_output)
         generated_loss = self.loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)

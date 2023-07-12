@@ -139,7 +139,7 @@ else:
 
 
 shuffle = False if a.shuffle == 'n' else True
-dataset_reader = Reader(a.batch_size, shuffle, 'train.py', 25000)
+dataset_reader = Reader(a.batch_size, shuffle, 'train.py', (25000,5000))
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
