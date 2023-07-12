@@ -1,52 +1,28 @@
-### Arguments
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("--model", required=True, help="tbd")
-parser.add_argument("--batch_size", type=int, help="tbd", default=1)
-parser.add_argument("--lmbda", type=int, help="tbd", default=100)
-parser.add_argument("--progress_freq", type=int, default=1000, help="display progress every n steps")
-parser.add_argument("--save_freq", type=int, default=5000, help="save model every n steps")
-parser.add_argument("--suffix", default=None, help="suffix for output paths")
-parser.add_argument("--shuffle", default='y', help="tbd")
-
-# parser.add_argument("--lr", type=float, default=0.0001, help="initial learning rate for adam")
-# parser.add_argument("--beta1", type=float, default=0.5, help="momentum term of adam")
-# parser.add_argument("--l1_weight", type=float, default=100.0, help="weight on L1 term for generator gradient")
-# parser.add_argument("--gan_weight", type=float, default=1.0, help="weight on GAN term for generator gradient")
-
-# parser.add_argument("--ndf", type=int, default=32, help="number of generator filters in first conv layer")
-# parser.add_argument("--train_count", type=int, default=64000, help="number of training data")
-# parser.add_argument("--test_count", type=int, default=384, help="number of test data")
-# parser.add_argument("--gpus", help="gpus to run", default="0")
-# parser.add_argument("--blk", type=int, default=32, help="size of sample lr image")
-
-a = parser.parse_args()
-print(f'Arguments read: {a}')
-
-assert a.model in ['psgan',
-                   'pix2pix',
-                   'pix2pix_psganloss',
-                   'pix2pix_mse',
-                   'psgan_mse',
-                   'pix2pix_vgg',
-                   'psgan_vgg',
-                   'pix2pix_wstein']
-### End arguments
-
-import os
-pid = os.getpid()
-print("PID:", pid)
-
 import sys
 import os
 sys.path.append(os.getcwd())
 import init
 
-print(f'running on environment: "{init.ENVIRONMENT}"')
-assert init.ENVIRONMENT in ['blaze',
-                       'colab',
-                       'local',
-                       'cpom']
+### Arguments
+import argparse
+parser = argparse.ArgumentParser()
+# parser.add_argument("--m", default='pix2pix', help="model name")
+parser.add_argument("--m", required=True, help="model name")
+parser.add_argument("--b", type=int, default=1, help="batch size")
+parser.add_argument("--shuffle", default='y', help="shuffle train/val data")
+parser.add_argument("--prog_freq", type=int, default=1000, help="display progress every n steps")
+parser.add_argument("--save_freq", type=int, default=5000, help="save model every n steps")
+parser.add_argument("--suffix", default=None, help="suffix for output paths")
+
+a = parser.parse_args()
+print(f'Arguments read: {a}')
+
+MODEL_NAME = a.m
+BATCH_SIZE = a.b
+SHUFFLE = a.shuffle
+PROGRESS_FREQ = a.prog_freq
+SAVE_FREQ = a.save_freq
+SUFFIX = a.suffix
 
 
 if init.ENVIRONMENT == 'blaze':
@@ -72,79 +48,65 @@ if init.ENVIRONMENT == 'blaze':
 
 
 import tensorflow as tf
-
-import glob
 import time
-import datetime
+import importlib
 
+from dataset.reader import Reader
 import sis_toolbox as tbx
 
-from models import pix2pix, psgan, pix2pix_psganloss, pix2pix_mse, psgan_mse, pix2pix_vgg, psgan_vgg, pix2pix_wstein
-from dataset.reader import Reader
+SUBFOLDER = f'{init.TIMESTAMP}_{MODEL_NAME}_{BATCH_SIZE}x{init.TILESIZE}'
+if SUFFIX is not None:
+    SUBFOLDER += f'_{SUFFIX}'
 
-### GPU checks only
-from tensorflow.python.client import device_lib
-
-def get_available_gpus():
-    local_device_protos = device_lib.list_local_devices()
-    return [x.name for x in local_device_protos if True]
-
-get_available_gpus()
-
-tf.config.list_physical_devices()
-
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-
-with tf.compat.v1.Session() as sess:
-    device_name = tf.test.gpu_device_name()
-    if device_name != '':
-        print('TensorFlow is using GPU:', device_name)
-    else:
-        print('TensorFlow is not using GPU')
-### End GPU checks
-
-path_subfolder = f'{init.TIMESTAMP}_{a.model}_{a.batch_size}x{init.TILESIZE}'
-if a.suffix is not None:
-    path_subfolder += f'_{a.suffix}'
-path_log = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/logs/')
-path_ckpt = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/ckpt/')
-path_imgs = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/samples/')
-path_model = os.path.join(init.OUTPUT_ROOT, f'{path_subfolder}/model/')
-os.makedirs(path_log, exist_ok=True)
+path_logs = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/logs/')
+path_ckpt = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/ckpt/')
+path_imgs = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/samples/')
+path_model = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/model/')
+os.makedirs(path_logs, exist_ok=True)
 os.makedirs(path_ckpt, exist_ok=True)
 os.makedirs(path_imgs, exist_ok=True)
 os.makedirs(path_model, exist_ok=True)
 
-# The training set consist of n images
-BUFFER_SIZE = len(glob.glob(os.path.join(init.TRAIN_DIR, '*')))
+# Dynamically import all classes in the directory
+directory = 'model'
+modules = []
+for filename in os.listdir(directory):
+    if filename.endswith('.py'):
+        module_name = filename[:-3]
+        modules.append(importlib.import_module("." + module_name, package=directory))
 
-if a.model == 'pix2pix':
-    model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'psgan':
-    model = psgan.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'pix2pix_psganloss':
-    model = pix2pix_psganloss.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'pix2pix_mse':
-    model = pix2pix_mse.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'psgan_mse':
-    model = psgan_mse.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'pix2pix_vgg':
-    model = pix2pix_vgg.Model(a.lmbda, path_log, path_ckpt)
-elif a.model == 'psgan_vgg':
-    model = psgan_vgg.Model(path_log, path_ckpt)
-elif a.model == 'pix2pix_wstein':
-    model = pix2pix_wstein.Model(a.lmbda, path_log, path_ckpt)
-else:
-    model = pix2pix.Model(a.lmbda, path_log, path_ckpt)
+model = None
+for module in modules:
+    if module.__name__[-len(MODEL_NAME):] == MODEL_NAME:
+        model = module.GAN(path_logs, path_ckpt)
 
-
-shuffle = False if a.shuffle == 'n' else True
-dataset_reader = Reader(a.batch_size, shuffle, 'train.py', (25000,5000))
-train_dataset = dataset_reader.train_dataset
-test_dataset = dataset_reader.test_dataset
 
 generator = model.generator
 discriminator = model.discriminator
+
+req_tf_version = '2.8.0'
+tf_gtet_280 = True
+for reqPart, part in zip(map(int, req_tf_version.split(".")), map(int, tf.__version__.split("."))):
+    if reqPart > part:
+        tf_gtet_280 = False
+        break
+    if reqPart < part:
+        break
+
+if tf_gtet_280:
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(path_model, 'generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(path_model, 'discriminator.png'))
+else:
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(path_model, 'generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(path_model, 'discriminator.png'))
+None
+
+
+
+shuffle = False if SHUFFLE == 'n' else True
+dataset_reader = Reader(BATCH_SIZE, shuffle, 'train.py', (25000, 5000))
+train_dataset = dataset_reader.train_dataset
+test_dataset = dataset_reader.test_dataset
 
 def fit(train_ds, test_ds, steps):
     # example_target, example_input = next(iter(test_ds.take(1)))
@@ -158,14 +120,14 @@ def fit(train_ds, test_ds, steps):
     example_targets = tf.stack(example_targets, axis=0)
 
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if step % a.progress_freq == 0:
+        if step % PROGRESS_FREQ == 0:
             # display.clear_output(wait=True)
             
             if step != 0:
-                print(f'Time taken for {a.progress_freq} steps: {time.time()-start:.2f} sec\n')
+                print(f'Time taken for {PROGRESS_FREQ} steps: {time.time()-start:.2f} sec\n')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=init.TIMESTAMP, iteration=step)
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=path_imgs, savemodel=MODEL_NAME, starttimestamp=init.TIMESTAMP, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
@@ -178,8 +140,9 @@ def fit(train_ds, test_ds, steps):
             print('.', end='', flush=True)
 
         # Save (checkpoint) the model every 5k steps
-        if (step + 1) % a.save_freq == 0:
+        if (step + 1) % SAVE_FREQ == 0:
             print(f'Step + 1 = {step + 1} - saving checkpoint')
             model.save()
+
 
 fit(train_dataset, test_dataset, steps=40000)

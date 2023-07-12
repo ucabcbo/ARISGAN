@@ -1,12 +1,6 @@
 import tensorflow as tf
 
 def conv(kernel_size:int, filters:int, stride:int, lrelu:bool, batchnorm:bool, padding:str='same'):
-    # name = f'conv-{kernel_size}x{filters}x{stride}'
-    # if lrelu:
-    #     name += '_lrelu'
-    # if batchnorm:
-    #     name += '_norm'
-
     initializer = tf.random_normal_initializer(0., 0.02)
     x = tf.keras.layers.Conv2D(filters,
                                kernel_size,
@@ -26,17 +20,9 @@ def conv(kernel_size:int, filters:int, stride:int, lrelu:bool, batchnorm:bool, p
     return result
 
 
-def deconv(kernel_size:int, out_channels:int, stride:int, relu:bool, batchnorm:bool, dropout:float, activation:str=None):
-    # name = f'deconv-{kernel_size}x{out_channels}x{stride}'
-    # if lrelu:
-    #     name += '_lrelu'
-    # if batchnorm:
-    #     name += '_norm'
-    # if dropout is not None:
-    #     name += f'_drop-{dropout}'
-
+def deconv(kernel_size:int, filters:int, stride:int, relu:bool, batchnorm:bool, dropout:float, activation:str=None):
     initializer = tf.random_normal_initializer(0., 0.02)
-    x = tf.keras.layers.Conv2DTranspose(out_channels,
+    x = tf.keras.layers.Conv2DTranspose(filters,
                                         kernel_size,
                                         strides=stride,
                                         padding='same',

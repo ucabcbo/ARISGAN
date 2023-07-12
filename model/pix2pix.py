@@ -35,6 +35,7 @@ class GAN:
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 21])
 
         x = inputs                                                          # 256,256,21
+        #TODO: try batch normalization first
         x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
         skip128 = x
         x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
@@ -105,8 +106,11 @@ class GAN:
         LMBDA = 100
 
         gan_loss = self.loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
-        # Mean absolute error
         l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
+        #TODO: currently not included
+        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
+        wasserstein_loss = -tf.reduce_mean(disc_generated_output)
+
         total_gen_loss = gan_loss + (LMBDA * l1_loss)
 
         return total_gen_loss, gan_loss, l1_loss

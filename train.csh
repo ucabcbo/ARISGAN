@@ -7,4 +7,4 @@ echo "Shuffle: "$3
 
 set outpath = "/cs/student/msc/aisd/2022/cboehm/projects/sis2/nohup/"$current_date"_"$1"_"$2"x256.txt"
 echo $outpath
-python /cs/student/msc/aisd/2022/cboehm/projects/sis2/train.py --model $1 --batch_size $2 --shuffle $3 >& $outpath &
+python /cs/student/msc/aisd/2022/cboehm/projects/sis2/train.py --m $1 --b $2 --shuffle $3 >& $outpath &
