@@ -144,5 +144,4 @@ def fit(train_ds, test_ds, steps):
             print(f'Step + 1 = {step + 1} - saving checkpoint')
             model.save()
 
-
 fit(train_dataset, test_dataset, steps=40000)
