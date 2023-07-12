@@ -16,8 +16,8 @@ class Reader():
         print(f'datamodel.Reader called by {caller}')
         if random_sample_size is not None:
             import random
-            train_file_list = random.sample(train_file_list, random_sample_size)
-            print(f'selected random sample: {len(train_file_list)}')
+            train_file_list = random.sample(train_file_list, random_sample_size[0])
+            print(f'selected random sample train: {len(train_file_list)}')
         train_dataset = tf.data.TFRecordDataset(train_file_list)
 
         self.BUFFER_SIZE = len(train_file_list)
@@ -31,10 +31,15 @@ class Reader():
         self.train_dataset = train_dataset
 
         test_file_list = [os.path.join(init.VAL_DIR, file) for file in os.listdir(init.VAL_DIR) if file.endswith('.tfrecord')]
-        try:
-            test_dataset = tf.data.TFRecordDataset(test_file_list)
-        except tf.errors.InvalidArgumentError:
-            test_dataset = tf.data.TFRecordDataset(train_file_list)
+        if random_sample_size is not None:
+            import random
+            test_file_list = random.sample(test_file_list, random_sample_size[1])
+            print(f'selected random sample val: {len(test_file_list)}')
+        test_dataset = tf.data.TFRecordDataset(test_file_list)
+        # try:
+        #     test_dataset = tf.data.TFRecordDataset(test_file_list)
+        # except tf.errors.InvalidArgumentError:
+        #     test_dataset = tf.data.TFRecordDataset(train_file_list)
         test_dataset = test_dataset.map(self.load_image_test)
         test_dataset = test_dataset.batch(BATCH_SIZE)
         self.test_dataset = test_dataset

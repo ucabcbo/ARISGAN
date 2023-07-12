@@ -15,7 +15,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 
-sys.path.append(os.path.expanduser('~/.snap/snap-python'))
+sys.path.append(os.path.expanduser('/home/cb/.snap/snap-python'))
 import snappy
 from snappy import ProductIO
 from snappy import jpy
