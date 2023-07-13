@@ -3,6 +3,7 @@ import json
 import sys
 import sis_toolbox as tbx
 from sis_toolbox import RGBProfile as rgb
+
 try:
     from preprocessing import snap_toolbox as stbx
 except Exception as e:
@@ -10,19 +11,18 @@ except Exception as e:
 
 # Read the configuration file
 try:
-    with open('../environment.json') as f:
+    with open('/home/ucabcbo/sis2/environment.json') as f:
         environment = json.load(f)
 except:
     with open('environment.json') as f:
         environment = json.load(f)
 
 try:
-    with open('../experiment.json') as f:
+    with open('/home/ucabcbo/sis2/experiment.json') as f:
         experiment = json.load(f)
 except:
     with open('experiment.json') as f:
         experiment = json.load(f)
-
 
 EXP = experiment
 
@@ -38,9 +38,6 @@ else:
     if experiment['sample_train'] is not None or experiment['sample_val'] is not None:
         print('W: Both sample_train and sample_val must be set for any to take effect.')
 
-SAMPLE_FREQ = environment['sample_freq']
-CKPT_FREQ = environment['ckpt_freq']
-
 GEN_LOSS = experiment['gen_loss']
 DISC_LOSS = experiment['disc_loss']
 
@@ -52,8 +49,9 @@ IMG_WIDTH = environment['img_width']
 IMG_HEIGHT = environment['img_height']
 INPUT_CHANNELS = environment['input_channels']
 OUTPUT_CHANNELS = environment['output_channels']
+SAMPLE_FREQ = environment['sample_freq']
+CKPT_FREQ = environment['ckpt_freq']
 
-# Access parameter values
 ENVIRONMENT = environment['environment']
 
 PROJECT_ROOT = environment['project_root']
