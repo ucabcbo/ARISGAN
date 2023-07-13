@@ -82,6 +82,11 @@ def setup_output():
     os.makedirs(OUTPUT_SAMPLES, exist_ok=True)
     os.makedirs(OUTPUT_MODEL, exist_ok=True)
 
+    experiment['environment'] = ENVIRONMENT
+    experiment['PID'] = os.getpid()
+    experiment['timestamp'] = TIMESTAMP
+    experiment['output_root'] = os.path.join(OUTPUT_ROOT, SUBFOLDER)
+
     with open(os.path.join(OUTPUT_MODEL, 'experiment.json'), 'w') as f:
         json.dump(experiment, f, indent=4)
 
