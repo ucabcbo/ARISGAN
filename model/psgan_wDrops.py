@@ -10,7 +10,7 @@ import model.layers as layers
 
 class GAN:
     
-    def __init__(self, PATH_LOGS, PATH_CKPT):
+    def __init__(self):
 
         self.generator = self.Generator()
         self.discriminator = self.Discriminator()
@@ -18,9 +18,8 @@ class GAN:
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
-        self.summary_writer = tf.summary.create_file_writer(PATH_LOGS)
+        self.summary_writer = tf.summary.create_file_writer(init.OUTPUT_LOGS)
 
-        self.checkpoint_prefix = os.path.join(PATH_CKPT)
         self.checkpoint = tf.train.Checkpoint(
             generator_optimizer=self.generator_optimizer,
             discriminator_optimizer=self.discriminator_optimizer,
@@ -30,7 +29,7 @@ class GAN:
 
     def Generator(self):
         
-        inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 21])
+        inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
         x = inputs
 
@@ -83,8 +82,8 @@ class GAN:
     def Discriminator(self):
         initializer = tf.random_normal_initializer(0., 0.02)
 
-        inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 21], name='input_image')
-        tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, 3], name='target_image')
+        inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
+        tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 
         # input = tf.concat([inp, tar], 3)  # 128*128*8
         inputs = tf.keras.layers.Concatenate(axis=3)([inp, tar]) # 256x256x24
@@ -162,5 +161,5 @@ class GAN:
             tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
 
     def save(self):
-        self.checkpoint.save(file_prefix=self.checkpoint_prefix)
+        self.checkpoint.save(file_prefix=init.OUTPUT_CKPT)
 

@@ -1,0 +1,16 @@
+{
+    "environment": "cpom",
+    "project_root": "/home/cb/sis2/",
+    "data_root": "/home/cb/sis2/data/",
+    "output_root": "/home/cb/sis2/output/",
+
+    "sample_freq": 1000,
+    "ckpt_freq": 5000,
+
+    "tilesize": 256,
+    "img_width": 256,
+    "img_height": 256,
+    "input_channels": 21,
+    "output_channels": 3
+
+}
