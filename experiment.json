@@ -1,10 +1,10 @@
 {
-    "model_name": "pix2pix_batchnorm",
+    "model_name": "pix2pix_fastdown",
     "batch_size": 1,
     "shuffle": false,
     "steps": 40000,
-    "sample_train": 15000,
-    "sample_val": 2500,
+    "sample_train": 5000,
+    "sample_val": 500,
 
     "gen_loss": {
         "gan": 1,
