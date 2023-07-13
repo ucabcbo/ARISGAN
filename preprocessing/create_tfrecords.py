@@ -20,7 +20,7 @@ filtered_tif_files = [file for file in tif_files if 'tifx' not in file]
 
 for tif_file in filtered_tif_files:
     tif_filename = os.path.splitext(os.path.basename(tif_file))[0]
-    tensor_filename = os.path.join(PATH, f'tfrecords{TILESIZE}/{tif_filename}.tfrecord')
+    tensor_filename = os.path.join(PATH, f'tfrecords{TILESIZE}_train/{tif_filename}.tfrecord')
     tensor_val_filename = os.path.join(PATH, f'tfrecords{TILESIZE}_val/{tif_filename}.tfrecord')
 
     if os.path.exists(tensor_filename) or os.path.exists(tensor_val_filename):

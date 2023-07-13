@@ -60,7 +60,7 @@ PROJECT_ROOT = environment['project_root']
 DATA_ROOT = environment['data_root']
 OUTPUT_ROOT = environment['output_root']
 
-TRAIN_DIR = os.path.join(DATA_ROOT, f'tfrecords{TILESIZE}/')
+TRAIN_DIR = os.path.join(DATA_ROOT, f'tfrecords{TILESIZE}_train/')
 VAL_DIR = os.path.join(DATA_ROOT, f'tfrecords{TILESIZE}_val/')
 TIF_DIR = os.path.join(DATA_ROOT, f'tif{TILESIZE}/')
 
