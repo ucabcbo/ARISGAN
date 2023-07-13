@@ -1,8 +1,8 @@
 {
-    "environment": "cpom",
-    "project_root": "/home/cb/sis2/",
-    "data_root": "/home/cb/sis2/data/",
-    "output_root": "/home/cb/sis2/output/",
+    "environment": "blaze",
+    "project_root": "/cs/student/msc/aisd/2022/cboehm/projects/sis2/",
+    "data_root": "/cs/student/msc/aisd/2022/cboehm/projects/li1_data/",
+    "output_root": "/cs/student/msc/aisd/2022/cboehm/projects/li1_output/",
 
     "sample_freq": 1000,
     "ckpt_freq": 5000,
