@@ -35,21 +35,17 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
-        skip128 = x
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
+        x = layers.batchnorm()(x)
+
+        x = layers.conv(5, 64, 4, lrelu=True, batchnorm=False)(x)           # 64,64,64
         skip64 = x
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
-        skip32 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
+        x = layers.conv(5, 128, 4, lrelu=True, batchnorm=True)(x)           # 16,16,128
         skip16 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
-        skip8 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
+        x = layers.conv(3, 256, 4, lrelu=True, batchnorm=True)(x)           # 4,4,256
         skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
+        x = layers.conv(3, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
         skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        x = layers.conv(3, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
 
         x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
         x = tf.keras.layers.Concatenate()([x, skip2])
@@ -58,19 +54,16 @@ class GAN:
         x = tf.keras.layers.Concatenate()([x, skip4])
 
         x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip8])
 
         x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
         x = tf.keras.layers.Concatenate()([x, skip16])
 
         x = layers.deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
-        x = tf.keras.layers.Concatenate()([x, skip32])
 
         x = layers.deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
         x = tf.keras.layers.Concatenate()([x, skip64])
 
         x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
-        x = tf.keras.layers.Concatenate()([x, skip128])
 
         last = layers.deconv(4, 3, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
 

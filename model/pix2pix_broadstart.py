@@ -35,9 +35,9 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
+        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=False)(x)           # 128,128,256
         skip128 = x
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
+        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 64,64,256
         skip64 = x
         x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
         skip32 = x
@@ -47,9 +47,9 @@ class GAN:
         skip8 = x
         x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
         skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
+        x = layers.conv(4, 1024, 2, lrelu=True, batchnorm=True)(x)           # 2,2,1024
         skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        x = layers.conv(4, 1024, 2, lrelu=True, batchnorm=True)(x)           # 1,1,1024
 
         x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
         x = tf.keras.layers.Concatenate()([x, skip2])
