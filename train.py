@@ -39,7 +39,7 @@ init.setup_output()
 # Dynamically import all classes in the directory
 directory = 'model'
 modules = []
-for filename in os.listdir(directory):
+for filename in os.listdir('/home/ucabcbo/sis2/model'):
     if filename.endswith('.py'):
         module_name = filename[:-3]
         modules.append(importlib.import_module("." + module_name, package=directory))
@@ -63,8 +63,10 @@ for reqPart, part in zip(map(int, req_tf_version.split(".")), map(int, tf.__vers
         break
 
 if tf_gtet_280:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, 'generator.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, 'discriminator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_discriminator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_generator_full.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_discriminator_full.png'))
 else:
     tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(init.OUTPUT_MODEL, 'generator.png'))
     tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(init.OUTPUT_MODEL, 'discriminator.png'))
@@ -90,7 +92,7 @@ def fit(train_ds, test_ds, steps):
             # display.clear_output(wait=True)
             
             if step != 0:
-                print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec\n')
+                print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
             tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=init.OUTPUT_SAMPLES, savemodel=init.MODEL_NAME, starttimestamp=init.TIMESTAMP, iteration=step)
