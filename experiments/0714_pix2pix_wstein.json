@@ -3,8 +3,8 @@
     "batch_size": 16,
     "shuffle": true,
     "steps": 40000,
-    "sample_train": 25000,
-    "sample_val": 5000,
+    "sample_train": 5000,
+    "sample_val": 500,
 
     "params": {
     },

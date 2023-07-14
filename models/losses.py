@@ -24,7 +24,7 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
         gen_losses['l1'] = l1_loss
 
     if GEN_LOSS['rmse'] is not None:
-        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
+        rmse_loss = tf.reduce_mean(tf.square(target - gen_output)) ** 0.5
         total_gen_loss = (total_gen_loss + (GEN_LOSS['rmse'] * rmse_loss)) if total_gen_loss is not None else GEN_LOSS['rmse'] * rmse_loss
         gen_losses['rmse'] = rmse_loss
 
