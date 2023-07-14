@@ -43,7 +43,7 @@ class GAN:
         x = layers.conv(3, 32, 1, batchnorm=False, lrelu=False)(x)
 
         for j in range(16):
-            
+
             blockinput = x
             for i in range(3):
                 l1input = x
@@ -91,7 +91,7 @@ class GAN:
         x = tf.keras.layers.Dense(512, 'relu')(x)
         last = layers.sigmoid()(x)
 
-        return tf.keras.Model(inputs=[inp, tar], outputs=x)
+        return tf.keras.Model(inputs=[inp, tar], outputs=last)
     
 
     @tf.function

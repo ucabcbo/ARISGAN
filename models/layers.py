@@ -88,7 +88,7 @@ def multiply_layer(units):
     return result
 
 # From SR-GAN
-def residual_block(kernel_size:int=3, filters:int=64, stride:int=1):
+def residual_block_srgan(kernel_size:int=3, filters:int=64, stride:int=1):
     initializer = tf.random_normal_initializer(0., 0.02)
     result = tf.keras.Sequential()
 
@@ -109,6 +109,34 @@ def residual_block(kernel_size:int=3, filters:int=64, stride:int=1):
                             use_bias=False))
     result.add(tf.keras.layers.BatchNormalization())
 
+    return result
+
+
+# From DSen2
+#TODO: kernel sizes and "scaling" not clear
+def residual_block_dsen2(kernel_size: int = 3, filters: int = 64, stride: int = 1):
+    initializer = tf.random_normal_initializer(0., 0.02)
+    result = tf.keras.Sequential()
+    result.add(tf.keras.layers.Conv2D(filters,
+                                      kernel_size,
+                                      strides=stride,
+                                      padding='same',
+                                      kernel_initializer=initializer,
+                                      use_bias=False))
+    result.add(lrelu())
+    result.add(tf.keras.layers.Conv2D(filters,
+                                      kernel_size,
+                                      strides=stride,
+                                      padding='same',
+                                      kernel_initializer=initializer,
+                                      use_bias=False))
+    result.add(batchnorm())
+    result.add(tf.keras.layers.Conv2D(filters,
+                                      kernel_size,
+                                      strides=stride,
+                                      padding='same',
+                                      kernel_initializer=initializer,
+                                      use_bias=False))
     return result
 
 

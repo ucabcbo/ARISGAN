@@ -91,7 +91,7 @@ class GAN:
         x = tf.keras.layers.Dense(512, 'relu')(x)
         last = layers.sigmoid()(x)
 
-        return tf.keras.Model(inputs=[inp, tar], outputs=x)
+        return tf.keras.Model(inputs=[inp, tar], outputs=last)
     
 
     @tf.function

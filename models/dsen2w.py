@@ -24,7 +24,7 @@ class GAN:
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
-        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=False)
 
         self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
 
@@ -33,7 +33,7 @@ class GAN:
             discriminator_optimizer=self.discriminator_optimizer,
             generator=self.generator,
             discriminator=self.discriminator)
-
+    
 
     def Generator(self):
         
@@ -41,47 +41,21 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        # Only difference to regular pix2pix:
-        x = layers.batchnorm()(x)
+        #TODO: all parameters tbc against original DSen2 paper
+        x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
-        skip128 = x
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
-        skip64 = x
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
-        skip32 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
-        skip16 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
-        skip8 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
-        skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
-        skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        #TODO: make parameter adjustable
+        for i in range(12):
+            mem = x
+            x = layers.residual_block_dsen2(3, 64, 1)(x)
+            x = tf.keras.layers.add([x, mem])
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip2])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 4,4,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip4])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip8])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip16])
-
-        x = layers.deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
-        x = tf.keras.layers.Concatenate()([x, skip32])
-
-        x = layers.deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
-        x = tf.keras.layers.Concatenate()([x, skip64])
-
-        x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
-        x = tf.keras.layers.Concatenate()([x, skip128])
-
-        last = layers.deconv(4, 3, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+        x = layers.conv(3, 21, 1, lrelu=True, batchnorm=False)(x)
+        
+        #TODO: meaningful in my setting as last layer?
+        x = tf.keras.layers.add([x, inputs])
+        #TODO: added to get to 3 channels
+        last = layers.conv(3, init.OUTPUT_CHANNELS, 1, lrelu=False, batchnorm=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
@@ -92,17 +66,25 @@ class GAN:
 
         x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)   # 128,128,64
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)   # 64,64,128
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)   # 32,32,256
+        x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)   # 256,256,64
+        x = layers.conv(3, 64, 2, lrelu=True, batchnorm=True)(x)    # 64,64,64
 
-        x = tf.keras.layers.ZeroPadding2D()(x)                      # 34,34,256
-        x = layers.conv(4, 512, 1, lrelu=False, batchnorm=False, padding='valid')(x) # 31,31,512
-        x = layers.batchnorm()(x)                                   # 31,31,512
-        x = layers.lrelu()(x)                                       # 31,31,512
-        x = tf.keras.layers.ZeroPadding2D()(x)                      # 30,30,1
+        x = layers.conv(3, 128, 1, lrelu=True, batchnorm=True)(x)   # 64,64,128
+        x = layers.conv(3, 128, 2, lrelu=True, batchnorm=True)(x)   # 32,32,128
 
-        last = layers.conv(4, 1, 1, lrelu=False, batchnorm=False, padding='valid')(x)                   # 30,30,1
+        x = layers.conv(3, 256, 1, lrelu=True, batchnorm=True)(x)   # 32,32,256
+        x = layers.conv(3, 256, 2, lrelu=True, batchnorm=True)(x)   # 16,16,256
+
+        x = layers.conv(3, 512, 1, lrelu=True, batchnorm=True)(x)   # 16,16,512
+        x = layers.conv(3, 512, 2, lrelu=True, batchnorm=True)(x)   # 8,8,512
+
+        x = layers.conv(3, 1024, 1, lrelu=True, batchnorm=True)(x)   # 16,16,512
+        x = layers.conv(3, 1024, 2, lrelu=True, batchnorm=True)(x)   # 8,8,512
+
+        x = tf.keras.layers.Dense(1024)(x)
+        x = layers.lrelu()(x)
+        x = tf.keras.layers.Dense(10)(x)
+        last = layers.sigmoid()(x)
 
         return tf.keras.Model(inputs=[inp, tar], outputs=last)
     

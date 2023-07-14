@@ -100,9 +100,9 @@ class GAN:
         x = layers.lrelu()(x)                                       # 31,31,512
         x = tf.keras.layers.ZeroPadding2D()(x)                      # 30,30,1
 
-        x = layers.conv(4, 1, 1, lrelu=False, batchnorm=False, padding='valid')(x)                   # 30,30,1
+        last = layers.conv(4, 1, 1, lrelu=False, batchnorm=False, padding='valid')(x)                   # 30,30,1
 
-        return tf.keras.Model(inputs=[inp, tar], outputs=x)
+        return tf.keras.Model(inputs=[inp, tar], outputs=last)
     
 
     @tf.function

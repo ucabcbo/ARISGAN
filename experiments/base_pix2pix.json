@@ -13,6 +13,7 @@
         "gan": 1,
         "nll": null,
         "l1": 100,
+        "l2": null,
         "rmse": null,
         "wstein": null
     },
