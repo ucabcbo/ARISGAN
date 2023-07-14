@@ -6,7 +6,7 @@
 # Request 1 gigabyte of RAM (must be an integer followed by M, G, or T)
 #$ -l mem=1G
 
-#$ -l gpu=2
+#$ -l gpu=1
 
 # Request 15 gigabyte of TMPDIR space (default is 10 GB - remove if cluster is diskless)
 #$ -l tmpfs=10G
