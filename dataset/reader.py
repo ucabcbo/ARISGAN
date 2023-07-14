@@ -26,7 +26,7 @@ class Reader():
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
         if self.SHUFFLE:
-            train_dataset = train_dataset.shuffle(min(self.BUFFER_SIZE, 2500))
+            train_dataset = train_dataset.shuffle(min(self.BUFFER_SIZE, init.MAX_SHUFFLE_BUFFER))
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 

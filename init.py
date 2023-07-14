@@ -1,13 +1,6 @@
 import os
 import json
 import sys
-import sis_toolbox as tbx
-from sis_toolbox import RGBProfile as rgb
-
-try:
-    from preprocessing import snap_toolbox as stbx
-except Exception as e:
-    print(f'STBX not loaded: {str(e)}')
 
 # Read the configuration file
 possiblepaths = ['environment.json',
@@ -32,6 +25,8 @@ INPUT_CHANNELS = environment['input_channels']
 OUTPUT_CHANNELS = environment['output_channels']
 SAMPLE_FREQ = environment['sample_freq']
 CKPT_FREQ = environment['ckpt_freq']
+
+MAX_SHUFFLE_BUFFER = environment['max_shuffle_buffer']
 
 ENVIRONMENT = environment['environment']
 
