@@ -34,8 +34,9 @@ if init.ENVIRONMENT == 'blaze':
     print(command)
     print(stdout.decode())
 
+import tensorflow as tf
 
-### GPU checks only
+### GPU checks
 from tensorflow.python.client import device_lib
 
 def get_available_gpus():
@@ -56,8 +57,6 @@ with tf.compat.v1.Session() as sess:
         print('TensorFlow is not using GPU')
 ### End GPU checks
 
-
-import tensorflow as tf
 import time
 import importlib
 import json
@@ -87,7 +86,7 @@ GEN_LOSS = experiment['gen_loss']
 DISC_LOSS = experiment['disc_loss']
 PARAMS = experiment['params']
 
-SUBFOLDER = f'{init.TIMESTAMP}_{MODEL_NAME}_{BATCH_SIZE}x{init.TILESIZE}'
+SUBFOLDER = f'{init.TIMESTAMP}_{a.exp}_{BATCH_SIZE}x{init.TILESIZE}'
 OUTPUT = dict()
 OUTPUT['logs'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/logs/')
 OUTPUT['ckpt'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/ckpt/')
