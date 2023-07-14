@@ -63,6 +63,11 @@ def dropout(rate:float):
     return result
 
 
+def relu(max_value=None):
+    result = tf.keras.layers.ReLU(max_value=max_value)
+    return result
+
+
 def prelu(alpha_initializer:float=0.25):
     result = PReLU(tf.keras.initializers.Constant(alpha_initializer))
     return result
@@ -73,6 +78,16 @@ def pixelshuffler(scale_factor:float):
     return result
 
 
+def multiply_lambda(units:int):
+    result = tf.keras.layers.Lambda(lambda x: x * tf.keras.backend.random_normal(shape=(1, 1, 1, units)))
+    # result = MultiplyLayer(units=units)
+    return result
+
+def multiply_layer(units):
+    result = tf.keras.layers.Lambda(lambda x: tf.multiply(x[0], x[1]))
+    return result
+
+# From SR-GAN
 def residual_block(kernel_size:int=3, filters:int=64, stride:int=1):
     initializer = tf.random_normal_initializer(0., 0.02)
     result = tf.keras.Sequential()
@@ -94,6 +109,17 @@ def residual_block(kernel_size:int=3, filters:int=64, stride:int=1):
                             use_bias=False))
     result.add(tf.keras.layers.BatchNormalization())
 
+    return result
+
+
+# From TARSGAN
+def dense_block(kernel_size:int=3, filters:int=32, stride:int=1):
+    result = tf.keras.Sequential()
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=False))
     return result
 
 
@@ -120,34 +146,9 @@ class PReLU(tf.keras.layers.Layer):
         return config
 
 
-# From SR-GAN
-# class PixelShuffler(tf.keras.layers.Layer):
-#     def __init__(self, scale_factor, **kwargs):
-#         super(PixelShuffler, self).__init__(**kwargs)
-#         self.scale_factor = scale_factor
-
-#     def call(self, inputs):
-#         batch_size, height, width, channels = tf.shape(inputs)
-#         # Calculate the output shape
-#         new_height = height * self.scale_factor
-#         new_width = width * self.scale_factor
-#         new_channels = channels // (self.scale_factor ** 2)
-
-#         # Reshape the input tensor
-#         reshaped = tf.reshape(inputs, (batch_size, height, width, self.scale_factor, self.scale_factor, new_channels))
-#         transposed = tf.transpose(reshaped, (0, 1, 2, 5, 3, 4))
-
-#         # Reshape to the desired output shape
-#         output = tf.reshape(transposed, (batch_size, new_height, new_width, new_channels))
-#         return output
-
-#     def get_config(self):
-#         config = super(PixelShuffler, self).get_config()
-#         config.update({'scale_factor': self.scale_factor})
-#         return config
-
 from tensorflow.keras import backend as K
 
+#From SR-GAN
 class PixelShuffler(tf.keras.layers.Layer):
     def __init__(self, scale_factor, **kwargs):
         super(PixelShuffler, self).__init__(**kwargs)
@@ -173,3 +174,54 @@ class PixelShuffler(tf.keras.layers.Layer):
         config = super(PixelShuffler, self).get_config()
         config.update({'scale_factor': self.scale_factor})
         return config
+    
+# # From TARSGAN
+# class MultiplyLayer(tf.keras.layers.Layer):
+#     def __init__(self, units, **kwargs):
+#         super(MultiplyLayer, self).__init__(**kwargs)
+#         self.units = units
+
+#     def build(self, input_shape):
+#         self.kernel = self.add_weight(
+#             shape=(1, 1, 1, input_shape[-1]),
+#             initializer='glorot_uniform',
+#             trainable=True,
+#             name='kernel'
+#         )
+#         super(MultiplyLayer, self).build(input_shape)
+
+#     def call(self, inputs):
+#         return inputs * self.kernel
+
+#     def compute_output_shape(self, input_shape):
+#         return input_shape
+
+#     def get_config(self):
+#         config = super(MultiplyLayer, self).get_config()
+#         config.update({'units': self.units})
+#         return config
+    
+# class MultiplyLayer(tf.keras.layers.Layer):
+#     def __init__(self, units=1, **kwargs):
+#         super(MultiplyLayer, self).__init__(**kwargs)
+#         self.units = units
+
+#     def build(self, input_shape):
+#         self.kernel = self.add_weight(
+#             shape=(input_shape[-1], self.units),
+#             initializer='glorot_uniform',
+#             trainable=True,
+#             name='kernel'
+#         )
+#         super(MultiplyLayer, self).build(input_shape)
+
+#     def call(self, inputs):
+#         return inputs * self.kernel
+
+#     def compute_output_shape(self, input_shape):
+#         return input_shape
+
+#     def get_config(self):
+#         config = super(MultiplyLayer, self).get_config()
+#         config.update({'units': self.units})
+#         return config

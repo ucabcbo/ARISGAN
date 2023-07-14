@@ -39,68 +39,85 @@ class GAN:
         
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
-        x = inputs                                                          # 256,256,21
+        x = inputs
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
-        skip128 = x
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
-        skip64 = x
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
-        skip32 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
-        skip16 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
-        skip8 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
-        skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
-        skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        x = layers.batchnorm()(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip2])
+        #encoder 1_2
+        x = layers.conv(3, 32, 1, lrelu=True, batchnorm=False)(x)    # 256x256x32
+        #encoder 2_2
+        x = layers.conv(3, 32, 1, lrelu=False, batchnorm=False)(x)     # 256x256x32
+        encoder_2_2 = x
+        x = layers.lrelu()(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 4,4,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip4])
+        #encoder 3_2
+        x = layers.conv(2, 64, 2, lrelu=True, batchnorm=False)(x)     # 128x128x64
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip8])
+        #encoder_4
+        x = layers.conv(3, 128, 1, lrelu=True, batchnorm=False)(x)    # 128x128x128
+        #encoder_5
+        x = layers.conv(3, 128, 1, lrelu=False, batchnorm=False)(x)    # 128x128x128
+        encoder5 = x
+        x = layers.lrelu()(x)
+        #encoder_6
+        x = layers.conv(3, 256, 2, lrelu=True, batchnorm=False)(x)    # 64x64x256
+        
+        #decoder_7
+        x = layers.conv(1, 256, 1, lrelu=True, batchnorm=False)(x)    # 64x64x256
+        #decoder_8
+        x = layers.conv(3, 256, 1, lrelu=False, batchnorm=False)(x)    # 64x64x256
+        decoder8 = x
+        x = layers.lrelu()(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip16])
+        #decoder_9
+        x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)   # 128x128x128
 
-        x = layers.deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
-        x = tf.keras.layers.Concatenate()([x, skip32])
+        # According to the paper, it should be decoder8, but sizes don't match
+        x = tf.keras.layers.Concatenate(axis=3)([x, encoder5])    # 128x128x256
+        x = layers.lrelu()(x)
 
-        x = layers.deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
-        x = tf.keras.layers.Concatenate()([x, skip64])
+        #decoder_10
+        x = layers.conv(3, 128, 1, lrelu=True, batchnorm=False)(x)    # 128x128x128
+        #decoder_11
+        x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)       # 256x256x128
 
-        x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
-        x = tf.keras.layers.Concatenate()([x, skip128])
+        x = tf.keras.layers.Concatenate(axis=3)([x, encoder_2_2])    # 256x256x192
+        x = layers.lrelu()(x)
 
-        last = layers.deconv(4, 3, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+        #decoder_12
+        x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)     # 256x256x64
+        #decoder_13
+        x = layers.conv(3, init.OUTPUT_CHANNELS, 1, lrelu=False, batchnorm=False)(x)    # 256x256xOUTPUT_CHANNELS
+
+        last = tf.keras.layers.ReLU()(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
     def Discriminator(self):
+        initializer = tf.random_normal_initializer(0., 0.02)
 
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 
-        x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
+        # input = tf.concat([inp, tar], 3)  # 128*128*8
+        inputs = tf.keras.layers.Concatenate(axis=3)([inp, tar]) # 256x256x24
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)   # 128,128,64
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)   # 64,64,128
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)   # 32,32,256
+        #layer_1
+        x = layers.conv(3, 32, 2, lrelu=True, batchnorm=False)(inputs)    # 128x128x32
 
-        x = tf.keras.layers.ZeroPadding2D()(x)                      # 34,34,256
-        x = layers.conv(4, 512, 1, lrelu=False, batchnorm=False, padding='valid')(x) # 31,31,512
-        x = layers.batchnorm()(x)                                   # 31,31,512
-        x = layers.lrelu()(x)                                       # 31,31,512
-        x = tf.keras.layers.ZeroPadding2D()(x)                      # 30,30,1
+        #layer_2
+        x = layers.conv(3, 64, 2, lrelu=True, batchnorm=False)(x)    # 64x64x64
 
-        x = layers.conv(4, 1, 1, lrelu=False, batchnorm=False, padding='valid')(x)                   # 30,30,1
+        #layer_3
+        x = layers.conv(3, 128, 2, lrelu=True, batchnorm=False)(x)    # 32x32x128
+        
+        #layer_4
+        x = layers.conv(3, 256, 1, lrelu=True, batchnorm=False)(x)    # 32x32x256
+
+        #layer_5
+        x = layers.conv(3, 1, 1, lrelu=False, batchnorm=False)(x)    # 32x32x1
+        x = layers.sigmoid()(x)
 
         return tf.keras.Model(inputs=[inp, tar], outputs=x)
     
@@ -136,3 +153,4 @@ class GAN:
 
     def save(self):
         self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])
+

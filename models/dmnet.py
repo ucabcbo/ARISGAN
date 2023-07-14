@@ -39,52 +39,53 @@ class GAN:
         
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
-        x = inputs                                                          # 256,256,21
+        x = inputs
 
-        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
-        skip128 = x
-        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
-        skip64 = x
-        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
-        skip32 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
-        skip16 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
-        skip8 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
-        skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
-        skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip2])
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        source1 = x
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 4,4,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip4])
+        x = layers.relu()(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip8])
+        split1_3 = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        split1_5 = layers.conv(5, 64, 1, batchnorm=False, lrelu=False)(x)
+        split1_7 = layers.conv(7, 64, 1, batchnorm=False, lrelu=False)(x)
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip16])
+        x = tf.keras.layers.concatenate([split1_3, split1_5, split1_7])
+        x = layers.relu()(x)
+        
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        source2 = x
 
-        x = layers.deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
-        x = tf.keras.layers.Concatenate()([x, skip32])
+        x = layers.relu()(x)
+        x = tf.keras.layers.concatenate([source1, x])
+        x = layers.relu()(x)
 
-        x = layers.deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
-        x = tf.keras.layers.Concatenate()([x, skip64])
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
 
-        x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
-        x = tf.keras.layers.Concatenate()([x, skip128])
+        split2_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, dilation_rate=1, padding='same')(x)
+        split2_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, dilation_rate=2, padding='same')(x)
+        split2_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, dilation_rate=3, padding='same')(x)
 
-        last = layers.deconv(4, 3, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+        x = tf.keras.layers.concatenate([split2_1, split2_2, split2_3])
+        x = layers.relu()(x)
+
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
+
+        x = tf.keras.layers.concatenate([source1, source2, x])
+        x = layers.relu()(x)
+        x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
+        last = layers.conv(1, 3, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
     def Discriminator(self):
-
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 
@@ -136,3 +137,4 @@ class GAN:
 
     def save(self):
         self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])
+

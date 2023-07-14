@@ -1,0 +1,26 @@
+{
+    "model_name": "tarsgan",
+    "batch_size": 1,
+    "shuffle": false,
+    "steps": 5000,
+    "sample_train": 500,
+    "sample_val": 100,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gan": 1,
+        "nll": null,
+        "l1": 100,
+        "l2": null,
+        "rmse": null,
+        "wstein": null
+    },
+
+    "disc_loss": {
+        "bce": 1,
+        "nll": null
+    }
+
+}

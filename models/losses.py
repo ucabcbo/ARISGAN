@@ -23,6 +23,11 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
         total_gen_loss = (total_gen_loss + (GEN_LOSS['l1'] * l1_loss)) if total_gen_loss is not None else GEN_LOSS['l1'] * l1_loss
         gen_losses['l1'] = l1_loss
 
+    if GEN_LOSS['l2'] is not None:
+        l2_loss = tf.reduce_mean(tf.square(target - gen_output))
+        total_gen_loss = (total_gen_loss + (GEN_LOSS['l2'] * l2_loss)) if total_gen_loss is not None else GEN_LOSS['l2'] * l2_loss
+        gen_losses['l2'] = l2_loss
+
     if GEN_LOSS['rmse'] is not None:
         rmse_loss = tf.reduce_mean(tf.square(target - gen_output)) ** 0.5
         total_gen_loss = (total_gen_loss + (GEN_LOSS['rmse'] * rmse_loss)) if total_gen_loss is not None else GEN_LOSS['rmse'] * rmse_loss
@@ -32,7 +37,7 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
         wstein_loss = -tf.reduce_mean(disc_generated_output)
         total_gen_loss = (total_gen_loss + (GEN_LOSS['wstein'] * wstein_loss)) if total_gen_loss is not None else GEN_LOSS['wstein'] * wstein_loss
         gen_losses['wstein'] = wstein_loss
-
+        
     return total_gen_loss, gen_losses
 
 
