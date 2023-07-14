@@ -35,6 +35,28 @@ if init.ENVIRONMENT == 'blaze':
     print(stdout.decode())
 
 
+### GPU checks only
+from tensorflow.python.client import device_lib
+
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if True]
+
+available_gpus = get_available_gpus()
+
+tf.config.list_physical_devices()
+
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
+with tf.compat.v1.Session() as sess:
+    device_name = tf.test.gpu_device_name()
+    if device_name != '':
+        print('TensorFlow is using GPU:', device_name)
+    else:
+        print('TensorFlow is not using GPU')
+### End GPU checks
+
+
 import tensorflow as tf
 import time
 import importlib
