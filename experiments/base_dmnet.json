@@ -1,5 +1,5 @@
 {
-    "model_name": "pix2pix",
+    "model_name": "dmnet",
     "batch_size": 16,
     "shuffle": true,
     "steps": 40000,
@@ -12,8 +12,8 @@
     "gen_loss": {
         "gan": 1,
         "nll": 0,
-        "l1": 100,
-        "l2": 0,
+        "l1": 0,
+        "l2": 1,
         "rmse": 0,
         "wstein": 0
     },
