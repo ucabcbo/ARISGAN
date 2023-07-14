@@ -131,13 +131,13 @@ for reqPart, part in zip(map(int, req_tf_version.split(".")), map(int, tf.__vers
         break
 
 if tf_gtet_280:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_generator.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_discriminator.png'))
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_generator_full.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_discriminator_full.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '11_gen_full.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '21_disc_full.png'))
 else:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'generator.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'discriminator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
 
 
 dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
@@ -163,7 +163,7 @@ def fit(train_ds, test_ds, steps):
                 print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], savemodel=MODEL_NAME, starttimestamp=init.TIMESTAMP, iteration=step)
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
