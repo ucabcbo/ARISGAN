@@ -13,6 +13,7 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
         gen_losses['gan'] = gan_loss
 
     if GEN_LOSS['nll'] is not None:
+        EPS = 1e-8
         nll_loss = tf.reduce_mean(-tf.math.log(disc_generated_output + EPS))
         total_gen_loss = (total_gen_loss + (GEN_LOSS['nll'] * nll_loss)) if total_gen_loss is not None else GEN_LOSS['nll'] * nll_loss
         gen_losses['nll'] = nll_loss
