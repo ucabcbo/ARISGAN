@@ -1,21 +1,27 @@
 #!/bin/bash -l
 
 # Request ten minutes of wallclock time (format hours:minutes:seconds).
-#$ -l h_rt=0:15:0
+#$ -l h_rt=24:0:0
 
 # Request 1 gigabyte of RAM (must be an integer followed by M, G, or T)
 #$ -l mem=1G
 
+#$ -l gpu=2
+
 # Request 15 gigabyte of TMPDIR space (default is 10 GB - remove if cluster is diskless)
-#$ -l tmpfs=15G
+#$ -l tmpfs=10G
 
 # Set the name of the job.
-#$ -N helloworld
+#$ -N train
 
 # Set the working directory to somewhere in your scratch space.  
 #  This is a necessary step as compute nodes cannot write to $HOME.
 # Replace "<your_UCL_id>" with your UCL user ID.
 #$ -wd /home/ucabcbo/Scratch/workspace
+
+echo "++++++++++++++++++++++++"
+echo $1
+echo "++++++++++++++++++++++++"
 
 module -f unload compilers mpi gcc-libs
 module load beta-modules
@@ -34,12 +40,17 @@ module load lua/5.3.1
 module load perl/5.22.0
 module load graphviz/2.40.1/gnu-4.9.2
 
+module list
+
+nvidia-smi
+
 # Your work should be done in $TMPDIR 
-cd $TMPDIR
+# cd $TMPDIR
 
 # Run the application and put the output into a file called date.txt
+datetime=$(date +'%m%d-%H%M')
 source /home/ucabcbo/sis2/venv/bin/activate
-python /home/ucabcbo/sis2/train.py > helloworld.txt
+python /home/ucabcbo/sis2/train.py --exp $1 > "/home/ucabcbo/nohup/$1"_"$datetime.txt"
 
 # Preferably, tar-up (archive) all output files onto the shared scratch area
 tar -zcvf $HOME/Scratch/workspace/files_from_job_$JOB_ID.tar.gz $TMPDIR
