@@ -156,18 +156,13 @@ def fit(train_ds, test_ds, steps):
     example_targets = tf.stack(example_targets, axis=0)
 
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if step % init.SAMPLE_FREQ == 0:
-            # display.clear_output(wait=True)
-            
+        if (step == 0) or ((step + 1) % init.SAMPLE_FREQ == 0):
             if step != 0:
                 print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=step)
-            # for example_target, example_input in test_dataset.take(1):
-            #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
-
-            print(f"Step: {step}")
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=(step + 1))
+            print(f"Step: {step + 1}")
 
         model.train_step(input_image, target, step)
 
