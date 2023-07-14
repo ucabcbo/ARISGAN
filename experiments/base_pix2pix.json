@@ -4,22 +4,23 @@
     "shuffle": true,
     "steps": 40000,
     "sample_train": 5000,
-    "sample_val": 500,
+    "sample_val": 250,
 
     "params": {
     },
 
     "gen_loss": {
         "gan": 1,
-        "nll": null,
+        "nll": 0,
         "l1": 100,
-        "rmse": null,
-        "wstein": null
+        "l2": 0,
+        "rmse": 0,
+        "wstein": 0
     },
 
     "disc_loss": {
         "bce": 1,
-        "nll": null
+        "nll": 0
     }
 
 }

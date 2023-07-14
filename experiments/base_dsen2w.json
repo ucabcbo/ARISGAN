@@ -1,26 +1,26 @@
 {
-    "model_name": "pix2pix",
+    "model_name": "dsen2w",
     "batch_size": 16,
     "shuffle": true,
     "steps": 40000,
     "sample_train": 5000,
-    "sample_val": 500,
+    "sample_val": 250,
 
     "params": {
     },
 
     "gen_loss": {
         "gan": 1,
-        "nll": null,
-        "l1": 100,
-        "l2": null,
-        "rmse": null,
-        "wstein": null
+        "nll": 0,
+        "l1": 0,
+        "l2": 0,
+        "rmse": 0,
+        "wstein": 100
     },
 
     "disc_loss": {
         "bce": 1,
-        "nll": 1
+        "nll": 0
     }
 
 }

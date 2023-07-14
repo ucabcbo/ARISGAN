@@ -95,8 +95,6 @@ class GAN:
         
 
     def Discriminator(self):
-        initializer = tf.random_normal_initializer(0., 0.02)
-
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 
@@ -117,9 +115,9 @@ class GAN:
 
         #layer_5
         x = layers.conv(3, 1, 1, lrelu=False, batchnorm=False)(x)    # 32x32x1
-        x = layers.sigmoid()(x)
+        last = layers.sigmoid()(x)
 
-        return tf.keras.Model(inputs=[inp, tar], outputs=x)
+        return tf.keras.Model(inputs=[inp, tar], outputs=last)
     
 
     @tf.function

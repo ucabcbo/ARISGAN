@@ -47,23 +47,23 @@ class GAN:
         x = layers.prelu(alpha_initializer=0.25)(x)
         block0 = x
 
-        x = layers.residual_block()(x)
+        x = layers.residual_block_srgan()(x)
         x = tf.keras.layers.Add()([x, block0])
         block1 = x
 
-        x = layers.residual_block()(x)
+        x = layers.residual_block_srgan()(x)
         x = tf.keras.layers.Add()([x, block1])
         block2 = x
 
-        x = layers.residual_block()(x)
+        x = layers.residual_block_srgan()(x)
         x = tf.keras.layers.Add()([x, block2])
         block3 = x
 
-        x = layers.residual_block()(x)
+        x = layers.residual_block_srgan()(x)
         x = tf.keras.layers.Add()([x, block3])
         block4 = x
 
-        x = layers.residual_block()(x)
+        x = layers.residual_block_srgan()(x)
         x = tf.keras.layers.Add()([x, block4])
 
         x = layers.conv(3, 64, 1, lrelu=False, batchnorm=True)(x)
@@ -83,8 +83,6 @@ class GAN:
         
 
     def Discriminator(self):
-        initializer = tf.random_normal_initializer(0., 0.02)
-
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 
@@ -104,7 +102,7 @@ class GAN:
 
         x = tf.keras.layers.Dense(1024)(x)
         x = layers.lrelu()(x)
-        x = tf.keras.layers.Dense(1)(x)
+        x = tf.keras.layers.Dense(10)(x)
         last = layers.sigmoid()(x)
 
         return tf.keras.Model(inputs=[inp, tar], outputs=last)
