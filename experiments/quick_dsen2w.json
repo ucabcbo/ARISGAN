@@ -1,5 +1,5 @@
 {
-    "model_name": "pix2pix",
+    "model_name": "dsen2w",
     "batch_size": 1,
     "shuffle": false,
     "steps": 5000,
@@ -12,10 +12,10 @@
     "gen_loss": {
         "gan": 1,
         "nll": null,
-        "l1": 100,
+        "l1": null,
         "l2": null,
         "rmse": null,
-        "wstein": null
+        "wstein": 1
     },
 
     "disc_loss": {

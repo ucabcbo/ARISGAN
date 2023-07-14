@@ -1,5 +1,5 @@
 {
-    "model_name": "pix2pix",
+    "model_name": "tarsgan_add",
     "batch_size": 1,
     "shuffle": false,
     "steps": 5000,

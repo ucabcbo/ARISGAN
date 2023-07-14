@@ -1,10 +1,10 @@
 {
-    "model_name": "psgan_wDrops",
-    "batch_size": 16,
-    "shuffle": true,
-    "steps": 40000,
-    "sample_train": 5000,
-    "sample_val": 500,
+    "model_name": "psgan",
+    "batch_size": 1,
+    "shuffle": false,
+    "steps": 5000,
+    "sample_train": 500,
+    "sample_val": 100,
 
     "params": {
     },
@@ -13,6 +13,7 @@
         "gan": null,
         "nll": 1,
         "l1": 100,
+        "l2": null,
         "rmse": null,
         "wstein": null
     },
