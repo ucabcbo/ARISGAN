@@ -1,18 +1,18 @@
 #!/bin/bash -l
 
 # Request ten minutes of wallclock time (format hours:minutes:seconds).
-#$ -l h_rt=24:0:0
+#xxx$ -l h_rt=24:0:0
 
 # Request 1 gigabyte of RAM (must be an integer followed by M, G, or T)
-#$ -l mem=1G
+#xxx$ -l mem=1G
 
-#$ -l gpu=1
+#xxx$ -l gpu=1
 
 # Request 15 gigabyte of TMPDIR space (default is 10 GB - remove if cluster is diskless)
-#$ -l tmpfs=10G
+#xxx$ -l tmpfs=25G
 
 # Set the name of the job.
-#$ -N train
+#xxx$ -N train
 
 # Set the working directory to somewhere in your scratch space.  
 #  This is a necessary step as compute nodes cannot write to $HOME.
