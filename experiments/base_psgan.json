@@ -4,7 +4,7 @@
     "shuffle": true,
     "steps": 40000,
     "sample_train": 5000,
-    "sample_val": 500,
+    "sample_val": 250,
 
     "params": {
     },
