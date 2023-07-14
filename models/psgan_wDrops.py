@@ -5,12 +5,18 @@ import init
 
 import tensorflow as tf
 
-import model.layers as layers
+import models.layers as layers
+import models.losses as losses
 
 
 class GAN:
     
-    def __init__(self):
+    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS):
+
+        self.OUTPUT = OUTPUT
+        self.PARAMS = PARAMS
+        self.GEN_LOSS = GEN_LOSS
+        self.DISC_LOSS = DISC_LOSS
 
         self.generator = self.Generator()
         self.discriminator = self.Discriminator()
@@ -18,7 +24,9 @@ class GAN:
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
-        self.summary_writer = tf.summary.create_file_writer(init.OUTPUT_LOGS)
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+
+        self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
 
         self.checkpoint = tf.train.Checkpoint(
             generator_optimizer=self.generator_optimizer,
@@ -107,28 +115,6 @@ class GAN:
         return tf.keras.Model(inputs=[inp, tar], outputs=x)
     
 
-    def generator_loss(self, disc_generated_output, gen_output, target):
-
-        GENWGT = 1
-        LMBDA = 100
-        EPS = 1e-8
-
-        gen_loss_GAN = tf.reduce_mean(-tf.math.log(disc_generated_output + EPS))
-        gen_loss_L1 = tf.reduce_mean(tf.abs(target - gen_output))
-        #TODO: check weightings
-        total_gen_loss = gen_loss_GAN * GENWGT + gen_loss_L1 * LMBDA
-        
-        return total_gen_loss, gen_loss_GAN, gen_loss_L1
-
-
-    def discriminator_loss(self, disc_real_output, disc_generated_output):
-
-        EPS = 1e-8
-        discrim_loss = tf.reduce_mean(-(tf.math.log(disc_real_output + EPS) + tf.math.log(1 - disc_generated_output + EPS)))
-
-        return discrim_loss
-
-
     @tf.function
     def train_step(self, input_image, target, step):
         generator = self.generator
@@ -141,25 +127,23 @@ class GAN:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            total_gen_loss, gen_loss_GAN, gen_loss_L1 = self.generator_loss(disc_generated_output, gen_output, target)
-            disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
+            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.GEN_LOSS, self.loss_object)
+            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.DISC_LOSS, self.loss_object)
 
-        generator_gradients = gen_tape.gradient(total_gen_loss,
-                                                generator.trainable_variables)
-        discriminator_gradients = disc_tape.gradient(disc_loss,
-                                                    discriminator.trainable_variables)
+        generator_gradients = gen_tape.gradient(total_gen_loss, generator.trainable_variables)
+        discriminator_gradients = disc_tape.gradient(total_disc_loss, discriminator.trainable_variables)
 
-        self.generator_optimizer.apply_gradients(zip(generator_gradients,
-                                                generator.trainable_variables))
-        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients,
-                                                    discriminator.trainable_variables))
+        self.generator_optimizer.apply_gradients(zip(generator_gradients, generator.trainable_variables))
+        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients, discriminator.trainable_variables))
 
         with summary_writer.as_default():
             tf.summary.scalar('total_gen_loss', total_gen_loss, step=step//1000)
-            tf.summary.scalar('gen_loss_GAN', gen_loss_GAN, step=step//1000)
-            tf.summary.scalar('gen_loss_L1', gen_loss_L1, step=step//1000)
-            tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
+            for gen_loss in list(gen_losses.keys()):
+                tf.summary.scalar(gen_loss, gen_losses[gen_loss], step=step//1000)
+            tf.summary.scalar('total_disc_loss', total_disc_loss, step=step//1000)
+            for disc_loss in list(disc_losses.keys()):
+                tf.summary.scalar(disc_loss, disc_losses[disc_loss], step=step//1000)
 
     def save(self):
-        self.checkpoint.save(file_prefix=init.OUTPUT_CKPT)
+        self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])
 

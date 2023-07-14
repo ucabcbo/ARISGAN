@@ -1,0 +1,25 @@
+{
+    "model_name": "psgan_wDrops",
+    "batch_size": 16,
+    "shuffle": true,
+    "steps": 40000,
+    "sample_train": 25000,
+    "sample_val": 5000,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gan": null,
+        "nll": 1,
+        "l1": 100,
+        "rmse": null,
+        "wstein": null
+    },
+
+    "disc_loss": {
+        "bce": null,
+        "nll": 1
+    }
+
+}

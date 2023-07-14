@@ -1,5 +1,4 @@
 environment.json
-experiment.json
 data/
 output/
 training_checkpoints/

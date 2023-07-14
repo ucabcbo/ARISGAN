@@ -1,0 +1,25 @@
+{
+    "model_name": "pix2pix_fastdown",
+    "batch_size": 16,
+    "shuffle": true,
+    "steps": 40000,
+    "sample_train": 25000,
+    "sample_val": 5000,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gan": 1,
+        "nll": null,
+        "l1": 100,
+        "rmse": null,
+        "wstein": null
+    },
+
+    "disc_loss": {
+        "bce": 1,
+        "nll": null
+    }
+
+}

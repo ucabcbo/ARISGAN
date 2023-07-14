@@ -5,12 +5,18 @@ import init
 
 import tensorflow as tf
 
-import model.layers as layers
+import models.layers as layers
+import models.losses as losses
 
 
 class GAN:
     
-    def __init__(self):
+    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS):
+
+        self.OUTPUT = OUTPUT
+        self.PARAMS = PARAMS
+        self.GEN_LOSS = GEN_LOSS
+        self.DISC_LOSS = DISC_LOSS
 
         self.generator = self.Generator()
         self.discriminator = self.Discriminator()
@@ -20,7 +26,7 @@ class GAN:
         
         self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-        self.summary_writer = tf.summary.create_file_writer(init.OUTPUT_LOGS)
+        self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
 
         self.checkpoint = tf.train.Checkpoint(
             generator_optimizer=self.generator_optimizer,
@@ -34,6 +40,9 @@ class GAN:
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
         x = inputs                                                          # 256,256,21
+
+        # Only difference to regular pix2pix:
+        x = layers.batchnorm()(x)
 
         x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
         skip128 = x
@@ -100,41 +109,6 @@ class GAN:
         return tf.keras.Model(inputs=[inp, tar], outputs=x)
     
 
-    def generator_loss(self, disc_generated_output, gen_output, target):
-
-        LMBDA = 100
-
-        gan_loss = self.loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
-        l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
-        #TODO: currently not included
-        rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
-        wasserstein_loss = -tf.reduce_mean(disc_generated_output)
-
-        total_gen_loss = gan_loss + (LMBDA * l1_loss)
-
-        return total_gen_loss, gan_loss, l1_loss
-
-        # gan_loss = loss_object(tf.ones_like(disc_generated_output), disc_generated_output)
-        # l1_loss = tf.reduce_mean(tf.abs(target - gen_output))
-        # rmse_loss = tf.reduce_mean((target - gen_output) ** 2) ** 1/2
-        # total_gen_loss = gan_loss + (self.LAMBDA * l1_loss)
-        # return total_gen_loss, gan_loss, l1_loss, rmse_loss
-
-
-    def discriminator_loss(self, disc_real_output, disc_generated_output):
-
-        real_loss = self.loss_object(tf.ones_like(disc_real_output), disc_real_output)
-        generated_loss = self.loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
-        total_disc_loss = real_loss + generated_loss
-
-        return total_disc_loss
-
-        # real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
-        # generated_loss = loss_object(tf.zeros_like(disc_generated_output), disc_generated_output)
-        # total_disc_loss = real_loss + generated_loss
-        # return total_disc_loss
-
-
     @tf.function
     def train_step(self, input_image, target, step):
         generator = self.generator
@@ -147,25 +121,22 @@ class GAN:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            total_gen_loss, gan_loss, l1_loss = self.generator_loss(disc_generated_output, gen_output, target)
-            disc_loss = self.discriminator_loss(disc_real_output, disc_generated_output)
+            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.GEN_LOSS, self.loss_object)
+            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.DISC_LOSS, self.loss_object)
 
-        generator_gradients = gen_tape.gradient(total_gen_loss,
-                                                generator.trainable_variables)
-        discriminator_gradients = disc_tape.gradient(disc_loss,
-                                                    discriminator.trainable_variables)
+        generator_gradients = gen_tape.gradient(total_gen_loss, generator.trainable_variables)
+        discriminator_gradients = disc_tape.gradient(total_disc_loss, discriminator.trainable_variables)
 
-        self.generator_optimizer.apply_gradients(zip(generator_gradients,
-                                                generator.trainable_variables))
-        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients,
-                                                    discriminator.trainable_variables))
+        self.generator_optimizer.apply_gradients(zip(generator_gradients, generator.trainable_variables))
+        self.discriminator_optimizer.apply_gradients(zip(discriminator_gradients, discriminator.trainable_variables))
 
         with summary_writer.as_default():
             tf.summary.scalar('total_gen_loss', total_gen_loss, step=step//1000)
-            tf.summary.scalar('gan_loss', gan_loss, step=step//1000)
-            tf.summary.scalar('l1_loss', l1_loss, step=step//1000)
-            tf.summary.scalar('disc_loss', disc_loss, step=step//1000)
+            for gen_loss in list(gen_losses.keys()):
+                tf.summary.scalar(gen_loss, gen_losses[gen_loss], step=step//1000)
+            tf.summary.scalar('total_disc_loss', total_disc_loss, step=step//1000)
+            for disc_loss in list(disc_losses.keys()):
+                tf.summary.scalar(disc_loss, disc_losses[disc_loss], step=step//1000)
 
     def save(self):
-        self.checkpoint.save(file_prefix=init.OUTPUT_CKPT)
-
+        self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])

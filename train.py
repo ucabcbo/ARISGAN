@@ -1,3 +1,13 @@
+### Arguments
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--exp", required=True, help="Experiment name (without ending), must be located in /experiments folder")
+
+a = parser.parse_args()
+print(f'Arguments read: {a}')
+### End arguments
+
+
 import sys
 import os
 sys.path.append(os.getcwd())
@@ -28,26 +38,63 @@ if init.ENVIRONMENT == 'blaze':
 import tensorflow as tf
 import time
 import importlib
+import json
 
 from dataset.reader import Reader
 import sis_toolbox as tbx
 
 
-init.setup_output()
+with open(os.path.join(init.PROJECT_ROOT, 'experiments', f'{a.exp}.json')) as f:
+    experiment = json.load(f)
+
+EXP = experiment
+
+MODEL_NAME = experiment['model_name']
+BATCH_SIZE = experiment['batch_size']
+SHUFFLE = experiment['shuffle']
+STEPS = experiment['steps']
+
+DATA_SAMPLE = None
+if experiment['sample_train'] is not None and experiment['sample_val'] is not None:
+    DATA_SAMPLE = (experiment['sample_train'],experiment['sample_val'])
+else:
+    if experiment['sample_train'] is not None or experiment['sample_val'] is not None:
+        print('W: Both sample_train and sample_val must be set for any to take effect.')
+
+GEN_LOSS = experiment['gen_loss']
+DISC_LOSS = experiment['disc_loss']
+PARAMS = experiment['params']
+
+SUBFOLDER = f'{init.TIMESTAMP}_{MODEL_NAME}_{BATCH_SIZE}x{init.TILESIZE}'
+OUTPUT = dict()
+OUTPUT['logs'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/logs/')
+OUTPUT['ckpt'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/ckpt/')
+OUTPUT['samples'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/samples/')
+OUTPUT['model'] = os.path.join(init.OUTPUT_ROOT, f'{SUBFOLDER}/model/')
+os.makedirs(OUTPUT['logs'], exist_ok=True)
+os.makedirs(OUTPUT['ckpt'], exist_ok=True)
+os.makedirs(OUTPUT['samples'], exist_ok=True)
+os.makedirs(OUTPUT['model'], exist_ok=True)
+
+with open(os.path.join(OUTPUT['model'], 'experiment.json'), 'w') as f:
+    experiment['environment'] = init.ENVIRONMENT
+    experiment['PID'] = os.getpid()
+    experiment['timestamp'] = init.TIMESTAMP
+    experiment['output_root'] = os.path.join(init.OUTPUT_ROOT, SUBFOLDER)
+    json.dump(experiment, f, indent=4)
 
 
 # Dynamically import all classes in the directory
-directory = 'model'
 modules = []
-for filename in os.listdir('/home/ucabcbo/sis2/model'):
+for filename in os.listdir(os.path.join(init.PROJECT_ROOT, 'models')):
     if filename.endswith('.py'):
         module_name = filename[:-3]
-        modules.append(importlib.import_module("." + module_name, package=directory))
+        modules.append(importlib.import_module("." + module_name, package='models'))
 
 model = None
 for module in modules:
-    if module.__name__[-len(init.MODEL_NAME):] == init.MODEL_NAME:
-        model = module.GAN()
+    if module.__name__[-len(MODEL_NAME):] == MODEL_NAME:
+        model = module.GAN(OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS)
 
 
 generator = model.generator
@@ -63,16 +110,16 @@ for reqPart, part in zip(map(int, req_tf_version.split(".")), map(int, tf.__vers
         break
 
 if tf_gtet_280:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_generator.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_discriminator.png'))
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_generator_full.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(init.OUTPUT_MODEL, '_discriminator_full.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_discriminator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_generator_full.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '_discriminator_full.png'))
 else:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(init.OUTPUT_MODEL, 'generator.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(init.OUTPUT_MODEL, 'discriminator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'discriminator.png'))
 
 
-dataset_reader = Reader(init.BATCH_SIZE, init.SHUFFLE, 'train.py', init.DATA_SAMPLE)
+dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
@@ -95,7 +142,7 @@ def fit(train_ds, test_ds, steps):
                 print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=init.OUTPUT_SAMPLES, savemodel=init.MODEL_NAME, starttimestamp=init.TIMESTAMP, iteration=step)
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], savemodel=MODEL_NAME, starttimestamp=init.TIMESTAMP, iteration=step)
             # for example_target, example_input in test_dataset.take(1):
             #     helper.generate_images(generator, example_input, example_target, showimg=False, PATH_IMGS=path_imgs, savemodel=model.name, starttimestamp=STARTTIME, iteration=step)
 
@@ -112,4 +159,4 @@ def fit(train_ds, test_ds, steps):
             print(f'Step + 1 = {step + 1} - saving checkpoint')
             model.save()
 
-fit(train_dataset, test_dataset, steps=init.STEPS)
+fit(train_dataset, test_dataset, steps=STEPS)
