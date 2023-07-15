@@ -13,9 +13,9 @@
         "gan": 1,
         "nll": null,
         "l1": null,
-        "l2": null,
+        "l2": 100,
         "rmse": null,
-        "wstein": 1
+        "wstein": null
     },
 
     "disc_loss": {

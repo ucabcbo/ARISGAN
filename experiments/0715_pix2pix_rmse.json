@@ -14,8 +14,8 @@
         "nll": null,
         "l1": null,
         "l2": null,
-        "rmse": null,
-        "wstein": 1
+        "rmse": 100,
+        "wstein": null
     },
 
     "disc_loss": {
