@@ -27,13 +27,7 @@ class GAN:
         self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
         self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
-
-        self.checkpoint = tf.train.Checkpoint(
-            generator_optimizer=self.generator_optimizer,
-            discriminator_optimizer=self.discriminator_optimizer,
-            generator=self.generator,
-            discriminator=self.discriminator)
-
+        
 
     def Generator(self):
         
@@ -133,6 +127,3 @@ class GAN:
             tf.summary.scalar('total_disc_loss', total_disc_loss, step=step//1000)
             for disc_loss in list(disc_losses.keys()):
                 tf.summary.scalar(disc_loss, disc_losses[disc_loss], step=step//1000)
-
-    def save(self):
-        self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])

@@ -139,10 +139,22 @@ else:
     tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
     tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
 
-
 dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
+
+checkpoint = tf.train.Checkpoint(
+    generator_optimizer=self.generator_optimizer,
+    discriminator_optimizer=self.discriminator_optimizer,
+    generator=self.generator,
+    discriminator=self.discriminator,
+    step=tf.Variable(0, dtype=tf.int64))
+
+
+def save_checkpoint(step:int):
+    checkpoint.step.assign(step)
+    checkpoint.save(file_prefix=self.OUTPUT['ckpt'])
+
 
 def fit(train_ds, test_ds, steps):
     # example_target, example_input = next(iter(test_ds.take(1)))
