@@ -60,10 +60,10 @@ class GAN:
         # x = tf.keras.layers.add([l1input, x, l1noise])
 
 
-        x = layers.conv(3, 32, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.conv(3, init.INPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
         #TODO: seems quite late
         x = tf.keras.layers.add([x, inputs])
-        last = layers.conv(3, 3, 1, batchnorm=False, lrelu=False)(x)
+        last = layers.conv(3, init.OUTPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
