@@ -1,6 +1,6 @@
 {
     "model_name": "pix2pix",
-    "batch_size": 16,
+    "batch_size": 1,
     "shuffle": true,
     "steps": 40000,
     "sample_train": 5000,
@@ -12,9 +12,9 @@
     "gen_loss": {
         "gan": 1,
         "nll": 0,
-        "l1": 100,
+        "l1": 0,
         "l2": 0,
-        "rmse": 0,
+        "rmse": 100,
         "wstein": 0
     },
 
