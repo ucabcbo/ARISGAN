@@ -12,10 +12,10 @@
     "gen_loss": {
         "gan": 1,
         "nll": 0,
-        "l1": 0,
+        "l1": 100,
         "l2": 0,
         "rmse": 0,
-        "wstein": 100
+        "wstein": 1
     },
 
     "disc_loss": {
