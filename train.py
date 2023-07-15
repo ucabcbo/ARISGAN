@@ -87,14 +87,19 @@ GEN_LOSS = experiment['gen_loss']
 DISC_LOSS = experiment['disc_loss']
 PARAMS = experiment['params']
 
-SUBFOLDER = f'{init.TIMESTAMP}_{a.exp}_{BATCH_SIZE}x{init.TILESIZE}'
+outputroot = init.OUTPUT_ROOT
+if a.out is None:
+    outputsubfolder = f'{init.TIMESTAMP}_{a.exp}_{BATCH_SIZE}x{init.TILESIZE}/'
+    outputroot = os.path.join(outputroot, outputsubfolder)
+else:
+    outputroot = a.out
 OUTPUT = dict()
-outputroot = init.OUTPUT_ROOT if a.out is None else a.out
-OUTPUT['logs'] = os.path.join(outputroot, f'{SUBFOLDER}/logs/')
-OUTPUT['ckpt'] = os.path.join(outputroot, f'{SUBFOLDER}/ckpt/ckpt')
-OUTPUT['samples'] = os.path.join(outputroot, f'{SUBFOLDER}/samples/')
-OUTPUT['model'] = os.path.join(outputroot, f'{SUBFOLDER}/model/')
+OUTPUT['logs'] = os.path.join(outputroot, f'logs/')
+OUTPUT['ckpt'] = os.path.join(outputroot, f'ckpt/ckpt')
+OUTPUT['samples'] = os.path.join(outputroot, f'samples/')
+OUTPUT['model'] = os.path.join(outputroot, f'model/')
 os.makedirs(OUTPUT['logs'], exist_ok=True)
+#TODO: don't create the final 'ckpt' prefix as directory
 os.makedirs(OUTPUT['ckpt'], exist_ok=True)
 os.makedirs(OUTPUT['samples'], exist_ok=True)
 os.makedirs(OUTPUT['model'], exist_ok=True)
@@ -103,7 +108,7 @@ with open(os.path.join(OUTPUT['model'], 'experiment.json'), 'w') as f:
     experiment['environment'] = init.ENVIRONMENT
     experiment['PID'] = os.getpid()
     experiment['timestamp'] = init.TIMESTAMP
-    experiment['output_root'] = os.path.join(outputroot, SUBFOLDER)
+    experiment['output_root'] = outputroot
     json.dump(experiment, f, indent=4)
 
 

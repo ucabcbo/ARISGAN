@@ -48,7 +48,7 @@ nvidia-smi
 # cd $TMPDIR
 
 # Run the application and put the output into a file called date.txt
-datetime=$(date +'%m%d-%H%M')
+datetime=$(date +'%m%d-%H%M%S')
 outputfolder="/home/ucabcbo/output/"$datetime"_"$1"/"
 mkdir $outputfolder
 
