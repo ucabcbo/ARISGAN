@@ -1,22 +1,7 @@
 #!/bin/bash -l
 
-# Request ten minutes of wallclock time (format hours:minutes:seconds).
-#xxx$ -l h_rt=24:0:0
-
-# Request 1 gigabyte of RAM (must be an integer followed by M, G, or T)
-#xxx$ -l mem=1G
-
-#xxx$ -l gpu=1
-
-# Request 15 gigabyte of TMPDIR space (default is 10 GB - remove if cluster is diskless)
-#xxx$ -l tmpfs=25G
-
-# Set the name of the job.
-#xxx$ -N train
-
 # Set the working directory to somewhere in your scratch space.  
 #  This is a necessary step as compute nodes cannot write to $HOME.
-# Replace "<your_UCL_id>" with your UCL user ID.
 #$ -wd /home/ucabcbo/Scratch/workspace
 
 echo "++++++++++++++++++++++++"
