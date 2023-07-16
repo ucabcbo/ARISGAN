@@ -14,7 +14,7 @@ class Reader():
 
         train_file_list = [os.path.join(init.TRAIN_DIR, file) for file in os.listdir(init.TRAIN_DIR) if file.endswith('.tfrecord')]
         print(f'datamodel.Reader called by {caller}')
-        if random_sample_size is not None:
+        if random_sample_size is not None and random_sample_size[0] < len(train_file_list):
             import random
             train_file_list = random.sample(train_file_list, random_sample_size[0])
             print(f'selected random sample train: {len(train_file_list)}')
@@ -31,7 +31,7 @@ class Reader():
         self.train_dataset = train_dataset
 
         test_file_list = [os.path.join(init.VAL_DIR, file) for file in os.listdir(init.VAL_DIR) if file.endswith('.tfrecord')]
-        if random_sample_size is not None:
+        if random_sample_size is not None and random_sample_size[1] < len(test_file_list):
             import random
             test_file_list = random.sample(test_file_list, random_sample_size[1])
             print(f'selected random sample val: {len(test_file_list)}')
