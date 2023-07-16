@@ -174,11 +174,8 @@ with open(os.path.join(outputroot, f'{a.exp}.json'), 'w') as f:
 
 
 def save_checkpoint(step:int):
-    print(f'DEBUG: step = {step}')
-    print(f'DEBUG: checkpoint.step before assign = {int(checkpoint.step)}')
     checkpoint.step.assign(step)
-    print(f'DEBUG: checkpoint.step after assign = {int(checkpoint.step)}')
-    print(f'Step + 1 = {step + 1} - saving checkpoint')
+    print(f'Step + 1 = {step + 1} - saving checkpoint (saved: {int(checkpoint.step)})')
     checkpoint.save(os.path.join(OUTPUT['ckpt'], 'ckpt'))
 
 
@@ -207,11 +204,11 @@ def fit(train_ds, test_ds, steps):
         if (step + 1) % 10 == 0:
             print('.', end='', flush=True)
 
-        # Save (checkpoint) the model every 5k steps
-        if (step + stepoffset + 1) % init.CKPT_FREQ == 0:
+        # Save (checkpoint) the model every n steps
+        if (step + 1) % init.CKPT_FREQ == 0:
             save_checkpoint(step + stepoffset)
 
 
-fit(train_dataset, test_dataset, steps=STEPS)
+fit(train_dataset, test_dataset, steps=(STEPS - stepoffset))
 
 print('EXPERIMENT COMPLETED')
