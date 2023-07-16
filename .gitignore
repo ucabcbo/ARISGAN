@@ -1,5 +1,6 @@
 environment.json
 data/
+data_alt/
 output/
 training_checkpoints/
 nohup/
