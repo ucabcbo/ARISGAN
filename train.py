@@ -104,13 +104,6 @@ os.makedirs(OUTPUT['ckpt'], exist_ok=True)
 os.makedirs(OUTPUT['samples'], exist_ok=True)
 os.makedirs(OUTPUT['model'], exist_ok=True)
 
-with open(os.path.join(outputroot, f'{a.exp}.json'), 'w') as f:
-    experiment['environment'] = init.ENVIRONMENT
-    experiment['PID'] = os.getpid()
-    experiment['timestamp'] = init.TIMESTAMP
-    experiment['output_root'] = outputroot
-    json.dump(experiment, f, indent=4)
-
 
 # Dynamically import all classes in the directory
 modules = []
@@ -158,16 +151,33 @@ checkpoint = tf.train.Checkpoint(
     step=tf.Variable(0, dtype=tf.int64))
 
 stepoffset = 0
+latest_checkpoint = None
 if a.restore is not None:
-    latest_checkpoint = tf.train.latest_checkpoint(os.path.join('/home/cb/sis2/output/', a.restore, '/ckpt'))
+    print('Trying to restore: ' + os.path.join(init.OUTPUT_ROOT, a.restore, 'ckpt/'))
+    latest_checkpoint = tf.train.latest_checkpoint(os.path.join(init.OUTPUT_ROOT, a.restore, 'ckpt/'))
     checkpoint.restore(latest_checkpoint).expect_partial()
     stepoffset = int(checkpoint.step)
     print("Loaded checkpoint:", latest_checkpoint)
     print("Continue at step:", stepoffset)
 
 
+with open(os.path.join(outputroot, f'{a.exp}.json'), 'w') as f:
+    experiment['environment'] = init.ENVIRONMENT
+    experiment['PID'] = os.getpid()
+    experiment['timestamp'] = init.TIMESTAMP
+    experiment['output_root'] = outputroot
+    if a.restore is not None:
+        experiment['ckpt_requested'] = a.restore
+        if latest_checkpoint is not None:
+            experiment['ckpt_loaded'] = f'{latest_checkpoint}:{stepoffset}'
+    json.dump(experiment, f, indent=4)
+
+
 def save_checkpoint(step:int):
+    print(f'DEBUG: step = {step}')
+    print(f'DEBUG: checkpoint.step before assign = {int(checkpoint.step)}')
     checkpoint.step.assign(step)
+    print(f'DEBUG: checkpoint.step after assign = {int(checkpoint.step)}')
     print(f'Step + 1 = {step + 1} - saving checkpoint')
     checkpoint.save(os.path.join(OUTPUT['ckpt'], 'ckpt'))
 
