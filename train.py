@@ -188,7 +188,7 @@ def fit(train_ds, test_ds, steps):
                 print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=(step stepoffset + 1))
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=(step + stepoffset + 1))
             print(f"Step: {step + stepoffset + 1}")
 
         model.train_step(input_image, target, step)
