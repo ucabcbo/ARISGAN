@@ -53,7 +53,7 @@ outputfolder="/home/ucabcbo/output/"$datetime"_"$1"/"
 mkdir $outputfolder
 
 source /home/ucabcbo/sis2/venv/bin/activate
-if [ -z "$1" ]; then
+if [ -z "$2" ]; then
     python /home/ucabcbo/sis2/train.py --exp $1 --out $outputfolder > $outputfolder"nohup.out"
 else
     python /home/ucabcbo/sis2/train.py --exp $1 --restore $2 --out $outputfolder > $outputfolder"nohup.out"
