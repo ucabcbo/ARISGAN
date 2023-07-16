@@ -2,9 +2,9 @@
     "model_name": "pix2pix",
     "batch_size": 1,
     "shuffle": false,
-    "steps": 5000,
-    "sample_train": 500,
-    "sample_val": 100,
+    "steps": 1000,
+    "sample_train": 50,
+    "sample_val": 10,
 
     "params": {
     },
