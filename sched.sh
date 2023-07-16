@@ -14,10 +14,12 @@ minutes=$((decimal * 6))
 duration_str=$hours":"$minutes":0"
 
 # Display the values
-echo "Duration: "$duration_str
-echo "Memory: "$2"G"
-echo "Experiment: "$3
-echo "Restore Checkpoint: "$4
+echo "================================================"
+echo -e "Duration:\t\t"$duration_str
+echo -e "Memory:\t\t\t"$2"G"
+echo -e "Experiment:\t\t"$3
+echo -e "Restore Checkpoint:\t"$4
+echo "================================================"
 
 
 experiment_path="/home/ucabcbo/sis2/experiments/"$3".json"
@@ -25,7 +27,7 @@ experiment_path="/home/ucabcbo/sis2/experiments/"$3".json"
 if test -f "$experiment_path"; then
     cd "/home/ucabcbo/sis2/"
     echo "qsub -N "$3" -l h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G -m es train.sh "$3" "$4
-    # qsub -N $3 -l "h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G" -m es train.sh $3 $4
+    qsub -N $3 -l "h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G" -m es train.sh $3 $4
 else
     echo "File does not exist: "$experiment_path
 fi
