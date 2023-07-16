@@ -64,6 +64,7 @@ class Reader():
 
     def random_crop(self, s2_image, s3_image):
         stacked_image = tf.concat([s2_image, s3_image], axis=2)
+        #TODO: replace 24 and :3/3: with init.INPUT and OUTPUT_CHANNELS
         cropped_image = tf.image.random_crop(stacked_image, size=[init.IMG_HEIGHT, init.IMG_WIDTH, 24])
         
         return cropped_image[:,:,:3], cropped_image[:,:,3:]
