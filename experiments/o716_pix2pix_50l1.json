@@ -12,7 +12,7 @@
     "gen_loss": {
         "gen_gan": 1,
         "gen_nll": null,
-        "gen_l1": 100,
+        "gen_l1": 50,
         "gen_l2": null,
         "gen_rmse": null,
         "gen_wstein": null

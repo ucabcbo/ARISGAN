@@ -10,17 +10,17 @@
     },
 
     "gen_loss": {
-        "gan": null,
-        "nll": 1,
-        "l1": 100,
-        "l2": null,
-        "rmse": null,
-        "wstein": null
+        "gen_gan": 1,
+        "gen_nll": null,
+        "gen_l1": 100,
+        "gen_l2": null,
+        "gen_rmse": null,
+        "gen_wstein": null
     },
 
     "disc_loss": {
-        "bce": null,
-        "nll": 1
+        "disc_bce": 1,
+        "disc_nll": null
     }
 
 }

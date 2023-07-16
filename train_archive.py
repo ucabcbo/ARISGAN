@@ -156,11 +156,6 @@ checkpoint = tf.train.Checkpoint(
     discriminator=discriminator,
     step=tf.Variable(0, dtype=tf.int64))
 
-latest_checkpoint = tf.train.latest_checkpoint('/home/cb/sis2/output/0715-2311_quick_pix2pix_1x256/ckpt')
-checkpoint.restore(latest_checkpoint).expect_partial()
-step_number = int(checkpoint.step)
-print("Loaded checkpoint:", latest_checkpoint)
-print("Number of steps:", step_number)
 
 def save_checkpoint(step:int):
     checkpoint.step.assign(step)
@@ -169,10 +164,11 @@ def save_checkpoint(step:int):
 
 
 def fit(train_ds, test_ds, steps):
+    # example_target, example_input = next(iter(test_ds.take(1)))
     start = time.time()
     example_targets = []
     example_inputs = []
-    for example_target, example_input in test_ds.take(5):
+    for example_target, example_input in test_dataset.take(5):
         example_targets.append(example_target[0])
         example_inputs.append(example_input[0])
     example_inputs = tf.stack(example_inputs, axis=0)

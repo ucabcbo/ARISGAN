@@ -3,6 +3,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--exp", required=True, help="Experiment name (without ending), must be located in /experiments folder")
 parser.add_argument("--out", required=False, default=None, help="Directory for output files")
+parser.add_argument("--restore", required=False, default=None, help="Checkpoint to be restored (experiment output directory)")
 
 a = parser.parse_args()
 print(f'Arguments read: {a}')
@@ -103,7 +104,7 @@ os.makedirs(OUTPUT['ckpt'], exist_ok=True)
 os.makedirs(OUTPUT['samples'], exist_ok=True)
 os.makedirs(OUTPUT['model'], exist_ok=True)
 
-with open(os.path.join(OUTPUT['model'], 'experiment.json'), 'w') as f:
+with open(os.path.join(outputroot, f'{a.exp}.json'), 'w') as f:
     experiment['environment'] = init.ENVIRONMENT
     experiment['PID'] = os.getpid()
     experiment['timestamp'] = init.TIMESTAMP
@@ -137,13 +138,13 @@ for reqPart, part in zip(map(int, req_tf_version.split(".")), map(int, tf.__vers
         break
 
 if tf_gtet_280:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '11_gen_full.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], '21_disc_full.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], 'generator.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], 'generator_full.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], 'discriminator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=True, show_layer_activations=True, to_file=os.path.join(OUTPUT['model'], 'discriminator_full.png'))
 else:
-    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
-    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
+    tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'generator.png'))
+    tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'discriminator.png'))
 
 dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
 train_dataset = dataset_reader.train_dataset
@@ -156,6 +157,14 @@ checkpoint = tf.train.Checkpoint(
     discriminator=discriminator,
     step=tf.Variable(0, dtype=tf.int64))
 
+stepoffset = 0
+if a.restore is not None:
+    latest_checkpoint = tf.train.latest_checkpoint(os.path.join('/home/cb/sis2/output/', a.restore, '/ckpt'))
+    checkpoint.restore(latest_checkpoint).expect_partial()
+    stepoffset = int(checkpoint.step)
+    print("Loaded checkpoint:", latest_checkpoint)
+    print("Continue at step:", stepoffset)
+
 
 def save_checkpoint(step:int):
     checkpoint.step.assign(step)
@@ -164,24 +173,23 @@ def save_checkpoint(step:int):
 
 
 def fit(train_ds, test_ds, steps):
-    # example_target, example_input = next(iter(test_ds.take(1)))
     start = time.time()
     example_targets = []
     example_inputs = []
-    for example_target, example_input in test_dataset.take(5):
+    for example_target, example_input in test_ds.take(5):
         example_targets.append(example_target[0])
         example_inputs.append(example_input[0])
     example_inputs = tf.stack(example_inputs, axis=0)
     example_targets = tf.stack(example_targets, axis=0)
 
     for step, (target, input_image) in train_ds.repeat().take(steps).enumerate():
-        if (step == 0) or ((step + 1) % init.SAMPLE_FREQ == 0):
+        if (step == 0) or ((step + stepoffset + 1) % init.SAMPLE_FREQ == 0):
             if step != 0:
                 print(f'Time taken for {init.SAMPLE_FREQ} steps: {time.time()-start:.2f} sec')
                 start = time.time()
             
-            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=(step + 1))
-            print(f"Step: {step + 1}")
+            tbx.generate_images(generator, example_inputs, example_targets, showimg=False, PATH_IMGS=OUTPUT['samples'], model_name=a.exp, iteration=(step stepoffset + 1))
+            print(f"Step: {step + stepoffset + 1}")
 
         model.train_step(input_image, target, step)
 
@@ -190,7 +198,10 @@ def fit(train_ds, test_ds, steps):
             print('.', end='', flush=True)
 
         # Save (checkpoint) the model every 5k steps
-        if (step + 1) % init.CKPT_FREQ == 0:
-            save_checkpoint(step)
+        if (step + stepoffset + 1) % init.CKPT_FREQ == 0:
+            save_checkpoint(step + stepoffset)
+
 
 fit(train_dataset, test_dataset, steps=STEPS)
+
+print('EXPERIMENT COMPLETED')
