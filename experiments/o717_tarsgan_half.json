@@ -7,7 +7,7 @@
     "sample_val": 250,
 
     "params": {
-        "layers": 16
+        "layers": 8
     },
 
     "gen_loss": {

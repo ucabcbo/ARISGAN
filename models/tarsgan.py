@@ -42,7 +42,7 @@ class GAN:
         x = inputs
         x = layers.conv(3, 32, 1, batchnorm=False, lrelu=False)(x)
 
-        for j in range(16):
+        for j in range(self.PARAMS['layers']):
 
             blockinput = x
             for i in range(3):
