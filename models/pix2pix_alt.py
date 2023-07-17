@@ -72,7 +72,7 @@ class GAN:
         x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
         x = tf.keras.layers.Concatenate()([x, skip128])
 
-        last = layers.deconv(4, 3, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+        last = layers.deconv(4, init.OUTPUT_CHANNELS, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
