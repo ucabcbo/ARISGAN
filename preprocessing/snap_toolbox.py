@@ -138,9 +138,9 @@ def cut_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, e
             output_tif = f'tif{tilesize}/{file_index}_{TILECODE}.tif'
 
             tile_inventory = tile_inventory.append({'pair_index': file_index,
-                                    'tile': TILECODE,
-                                    'size': tilesize,
-                                    'status': 'ok'}, ignore_index=True)
+                                                    'tile': TILECODE,
+                                                    'size': tilesize,
+                                                    'status': 'ok'}, ignore_index=True)
             tile_index = tile_inventory.index[-1]
 
             # if os.path.exists(os.path.join(PATH_DATA, output_filename)):
