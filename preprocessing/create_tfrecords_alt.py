@@ -21,7 +21,7 @@ for file in selected_files:
     filename = os.path.splitext(file)[0]
     print('Filename:', filename)
 
-    suffix = random.choices(['train', 'val'], [0.9, 0.1])[0]
+    suffix = random.choices(['train', 'val'], [0.637, 0.363])[0]
     print('Suffix:', suffix)
 
     raw_tiff = rasterio.open(os.path.join(init.DATA_ROOT, f'tif{init.TILESIZE}/', file))
