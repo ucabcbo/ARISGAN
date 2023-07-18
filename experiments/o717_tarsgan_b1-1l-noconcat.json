@@ -1,14 +1,14 @@
 {
     "model_name": "tarsgan",
-    "batch_size": 16,
+    "batch_size": 1,
     "shuffle": true,
     "steps": 40000,
     "sample_train": 5000,
     "sample_val": 250,
 
     "params": {
-        "layers": 8,
-        "concat": true
+        "layers": 1,
+        "concat": false
     },
 
     "gen_loss": {

@@ -7,8 +7,8 @@
     "sample_val": 250,
 
     "params": {
-        "layers": 8,
-        "concat": true
+        "layers": 1,
+        "concat": false
     },
 
     "gen_loss": {
