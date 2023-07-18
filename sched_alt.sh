@@ -26,7 +26,7 @@ experiment_path="/home/ucabcbo/sis2/experiments/"$3".json"
 
 if test -f "$experiment_path"; then
     cd "/home/ucabcbo/sis2/"
-    echo "qsub -N "$3" -l h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G -m es train_alt.sh "$3" "$4
+    echo "qsub -N alt_"$3" -l h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G -m es train_alt.sh "$3" "$4
     qsub -N $3 -l "h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G" -m es train_alt.sh $3 $4
 else
     echo "File does not exist: "$experiment_path
