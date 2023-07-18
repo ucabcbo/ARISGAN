@@ -61,8 +61,8 @@ class GAN:
 
 
         x = layers.conv(3, 32, 1, batchnorm=False, lrelu=False)(x)
-        #TODO: seems quite late
-        x = tf.keras.layers.concatenate([x, inputs])
+        if self.PARAMS['concat']:
+            x = tf.keras.layers.concatenate([x, inputs])
         last = layers.conv(3, 3, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)

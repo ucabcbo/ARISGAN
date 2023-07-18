@@ -1,12 +1,14 @@
 {
-    "model_name": "pix2pix",
+    "model_name": "tarsgan",
     "batch_size": 16,
     "shuffle": true,
     "steps": 40000,
-    "sample_train": 10083,
-    "sample_val": 5615,
+    "sample_train": 5000,
+    "sample_val": 250,
 
     "params": {
+        "layers": 1,
+        "concat": false
     },
 
     "gen_loss": {

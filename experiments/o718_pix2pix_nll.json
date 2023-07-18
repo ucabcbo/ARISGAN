@@ -19,8 +19,8 @@
     },
 
     "disc_loss": {
-        "disc_bce": 1,
-        "disc_nll": 0
+        "disc_bce": 0,
+        "disc_nll": 1
     }
 
 }

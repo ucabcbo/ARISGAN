@@ -10,8 +10,8 @@
     },
 
     "gen_loss": {
-        "gen_gan": 1,
-        "gen_nll": 0,
+        "gen_gan": 0,
+        "gen_nll": 1,
         "gen_l1": 100,
         "gen_l2": 0,
         "gen_rmse": 0,
@@ -19,8 +19,8 @@
     },
 
     "disc_loss": {
-        "disc_bce": 1,
-        "disc_nll": 0
+        "disc_bce": 0,
+        "disc_nll": 1
     }
 
 }
