@@ -1,18 +1,27 @@
 
 import sys
 import os
-sys.path.append(os.getcwd())
-import init
-
 import tensorflow as tf
+
+sys.path.append(os.getcwd())
 import sis_toolbox as tbx
 
 class Reader():
 
-    def __init__(self, BATCH_SIZE, SHUFFLE, caller, random_sample_size=None):
+    def __init__(self, BATCH_SIZE, SHUFFLE, init, caller, random_sample_size=None):
+        
         self.SHUFFLE = SHUFFLE
+        self.TRAIN_DIR = init.TRAIN_DIR
+        self.VAL_DIR = init.VAL_DIR
+        self.MAX_SHUFFLE_BUFFER = init.MAX_SHUFFLE_BUFFER
+        self.IMG_HEIGHT = init.IMG_HEIGHT
+        self.IMG_WIDTH = init.IMG_WIDTH
+        self.TILESIZE = init.TILESIZE
+        self.INPUT_CHANNELS = init.INPUT_CHANNELS
+        self.OUTPUT_CHANNELS = init.OUTPUT_CHANNELS
+        self.PARSE_CODE = init.PARSE_CODE
 
-        train_file_list = [os.path.join(init.TRAIN_DIR, file) for file in os.listdir(init.TRAIN_DIR) if file.endswith('.tfrecord')]
+        train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if file.endswith('.tfrecord')]
         print(f'datamodel.Reader called by {caller}')
         if random_sample_size is not None and random_sample_size[0] < len(train_file_list):
             import random
@@ -26,11 +35,11 @@ class Reader():
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
         if self.SHUFFLE:
-            train_dataset = train_dataset.shuffle(min(self.BUFFER_SIZE, init.MAX_SHUFFLE_BUFFER))
+            train_dataset = train_dataset.shuffle(min(self.BUFFER_SIZE, self.MAX_SHUFFLE_BUFFER))
         train_dataset = train_dataset.batch(BATCH_SIZE)
         self.train_dataset = train_dataset
 
-        test_file_list = [os.path.join(init.VAL_DIR, file) for file in os.listdir(init.VAL_DIR) if file.endswith('.tfrecord')]
+        test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if file.endswith('.tfrecord')]
         if random_sample_size is not None and random_sample_size[1] < len(test_file_list):
             import random
             test_file_list = random.sample(test_file_list, random_sample_size[1])
@@ -64,17 +73,17 @@ class Reader():
 
     def random_crop(self, s2_image, s3_image):
         stacked_image = tf.concat([s2_image, s3_image], axis=2)
-        #TODO: replace 24 and :3/3: with init.INPUT and OUTPUT_CHANNELS
-        cropped_image = tf.image.random_crop(stacked_image, size=[init.IMG_HEIGHT, init.IMG_WIDTH, 24])
+        #TODO: replace 24 and :3/3: with self.INPUT and OUTPUT_CHANNELS
+        cropped_image = tf.image.random_crop(stacked_image, size=[self.IMG_HEIGHT, self.IMG_WIDTH, self.INPUT_CHANNELS + self.OUTPUT_CHANNELS])
         
-        return cropped_image[:,:,:3], cropped_image[:,:,3:]
+        return cropped_image[:,:,:self.OUTPUT_CHANNELS], cropped_image[:,:,self.OUTPUT_CHANNELS:]
         # return resize(input_image, real_image, IMG_HEIGHT, IMG_WIDTH)
 
 
     @tf.function()
     def random_jitter(self, s2_image, s3_image):
         # Resizing to 286x286
-        s2_image, s3_image = self.resize(s2_image, s3_image, int(init.IMG_HEIGHT * 1.11), int(init.IMG_WIDTH * 1.11))
+        s2_image, s3_image = self.resize(s2_image, s3_image, int(self.IMG_HEIGHT * 1.11), int(self.IMG_WIDTH * 1.11))
         
         # Random cropping back to 256x256
         s2_image, s3_image = self.random_crop(s2_image, s3_image)
@@ -88,8 +97,11 @@ class Reader():
 
 
     def load_image_train(self, tfrecord):
-        s2_image, s3_image = tbx.parse_tfrecord(tfrecord, init.TILESIZE)
-        s2_image, s3_image = self.resize(s2_image, s3_image, init.IMG_HEIGHT, init.IMG_WIDTH)
+        if self.PARSE_CODE == 'alt':
+            s2_image, s3_image = tbx.parse_tfrecord_alt(tfrecord, self.TILESIZE)
+        else:
+            s2_image, s3_image = tbx.parse_tfrecord(tfrecord, self.TILESIZE)
+        s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
         s2_image, s3_image = self.random_jitter(s2_image, s3_image)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
         
@@ -97,8 +109,11 @@ class Reader():
 
 
     def load_image_test(self, image_file):
-        s2_image, s3_image = tbx.parse_tfrecord(image_file, init.TILESIZE)
-        s2_image, s3_image = self.resize(s2_image, s3_image, init.IMG_HEIGHT, init.IMG_WIDTH)
+        if self.PARSE_CODE == 'alt':
+            s2_image, s3_image = tbx.parse_tfrecord_alt(image_file, self.TILESIZE)
+        else:
+            s2_image, s3_image = tbx.parse_tfrecord(image_file, self.TILESIZE)
+        s2_image, s3_image = self.resize(s2_image, s3_image, self.IMG_HEIGHT, self.IMG_WIDTH)
         s2_image, s3_image = self.normalize_tensor(s2_image, s3_image)
         
         return s2_image, s3_image
