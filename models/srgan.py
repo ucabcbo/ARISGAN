@@ -1,25 +1,23 @@
 import sys
 import os
-sys.path.append(os.getcwd())
-import init
-
 import tensorflow as tf
 
+sys.path.append(os.getcwd())
 import models.layers as layers
 import models.losses as losses
 
 
 class GAN:
     
-    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS):
+    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init):
 
         self.OUTPUT = OUTPUT
         self.PARAMS = PARAMS
         self.GEN_LOSS = GEN_LOSS
         self.DISC_LOSS = DISC_LOSS
 
-        self.generator = self.Generator()
-        self.discriminator = self.Discriminator()
+        self.generator = self.Generator(init)
+        self.discriminator = self.Discriminator(init)
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -35,14 +33,15 @@ class GAN:
             discriminator=self.discriminator)
     
 
-    def Generator(self):
+    def Generator(self, init):
         
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
         x = inputs                                                          # 256,256,21
 
-        # Original paper: stride 1. Introduced 4 to decrease my image size
-        x = layers.conv(9, 64, 4, lrelu=False, batchnorm=False)(x)
+        # Original paper: stride 1. Introduced 2x2 1 lrelu/batchnorm to decrease my image size
+        x = layers.conv(9, 64, 2, lrelu=True, batchnorm=True)(x)
+        x = layers.conv(9, 64, 2, lrelu=False, batchnorm=False)(x)
 
         x = layers.prelu(alpha_initializer=0.25)(x)
         block0 = x
@@ -82,7 +81,7 @@ class GAN:
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
-    def Discriminator(self):
+    def Discriminator(self, init):
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 

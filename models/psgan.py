@@ -1,30 +1,28 @@
 import sys
 import os
-sys.path.append(os.getcwd())
-import init
-
 import tensorflow as tf
 
+sys.path.append(os.getcwd())
 import models.layers as layers
 import models.losses as losses
 
 
 class GAN:
     
-    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS):
+    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init):
 
         self.OUTPUT = OUTPUT
         self.PARAMS = PARAMS
         self.GEN_LOSS = GEN_LOSS
         self.DISC_LOSS = DISC_LOSS
 
-        self.generator = self.Generator()
-        self.discriminator = self.Discriminator()
+        self.generator = self.Generator(init)
+        self.discriminator = self.Discriminator(init)
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
-        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=False)
 
         self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
 
@@ -35,7 +33,7 @@ class GAN:
             discriminator=self.discriminator)
 
 
-    def Generator(self):
+    def Generator(self, init):
         
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
@@ -70,7 +68,10 @@ class GAN:
         x = layers.lrelu()(x)
 
         #decoder_9
-        x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)   # 128x128x128
+        if self.PARAMS['dropouts']:
+            x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=0.5)(x)   # 128x128x128
+        else:
+            x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)   # 128x128x128
 
         # According to the paper, it should be decoder8, but sizes don't match
         x = tf.keras.layers.Concatenate(axis=3)([x, encoder5])    # 128x128x256
@@ -79,7 +80,10 @@ class GAN:
         #decoder_10
         x = layers.conv(3, 128, 1, lrelu=True, batchnorm=False)(x)    # 128x128x128
         #decoder_11
-        x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)       # 256x256x128
+        if self.PARAMS['dropouts']:
+            x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=0.5)(x)       # 256x256x128
+        else:
+            x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)       # 256x256x128
 
         x = tf.keras.layers.Concatenate(axis=3)([x, encoder_2_2])    # 256x256x192
         x = layers.lrelu()(x)
@@ -94,7 +98,7 @@ class GAN:
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
-    def Discriminator(self):
+    def Discriminator(self, init):
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 

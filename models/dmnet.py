@@ -1,25 +1,23 @@
 import sys
 import os
-sys.path.append(os.getcwd())
-import init
-
 import tensorflow as tf
 
+sys.path.append(os.getcwd())
 import models.layers as layers
 import models.losses as losses
 
 
 class GAN:
     
-    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS):
+    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init):
 
         self.OUTPUT = OUTPUT
         self.PARAMS = PARAMS
         self.GEN_LOSS = GEN_LOSS
         self.DISC_LOSS = DISC_LOSS
 
-        self.generator = self.Generator()
-        self.discriminator = self.Discriminator()
+        self.generator = self.Generator(init)
+        self.discriminator = self.Discriminator(init)
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -35,7 +33,7 @@ class GAN:
             discriminator=self.discriminator)
 
 
-    def Generator(self):
+    def Generator(self, init):
         
         inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
 
@@ -80,12 +78,12 @@ class GAN:
         x = layers.relu()(x)
         x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
         x = layers.relu()(x)
-        last = layers.conv(1, 3, 1, batchnorm=False, lrelu=False)(x)
+        last = layers.conv(1, init.OUTPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
-    def Discriminator(self):
+    def Discriminator(self, init):
         inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
 

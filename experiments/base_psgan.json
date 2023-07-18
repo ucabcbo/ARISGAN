@@ -7,6 +7,7 @@
     "sample_val": 5615,
 
     "params": {
+        "dropouts": false
     },
 
     "gen_loss": {

@@ -145,7 +145,7 @@ else:
     tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '10_gen.png'))
     tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], '20_disc.png'))
 
-dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
+dataset_reader = Reader(BATCH_SIZE, SHUFFLE, init, 'train.py', DATA_SAMPLE)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 

@@ -25,6 +25,7 @@ INPUT_CHANNELS = environment['input_channels']
 OUTPUT_CHANNELS = environment['output_channels']
 SAMPLE_FREQ = environment['sample_freq']
 CKPT_FREQ = environment['ckpt_freq']
+PARSE_CODE = environment['parse_code']
 
 MAX_SHUFFLE_BUFFER = environment['max_shuffle_buffer']
 

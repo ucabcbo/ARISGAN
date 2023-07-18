@@ -9,7 +9,6 @@ a = parser.parse_args()
 print(f'Arguments read: {a}')
 ### End arguments
 
-
 import sys
 import os
 sys.path.append(os.getcwd())
@@ -63,7 +62,7 @@ import time
 import importlib
 import json
 
-from dataset.reader_alt import Reader
+from dataset.reader import Reader
 import sis_toolbox as tbx
 
 
@@ -115,7 +114,7 @@ for filename in os.listdir(os.path.join(init.PROJECT_ROOT, 'models')):
 model = None
 for module in modules:
     if module.__name__[-len(MODEL_NAME):] == MODEL_NAME:
-        model = module.GAN(OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS)
+        model = module.GAN(OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init)
 
 
 generator = model.generator
@@ -139,7 +138,7 @@ else:
     tf.keras.utils.plot_model(generator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'generator.png'))
     tf.keras.utils.plot_model(discriminator, show_shapes=True, expand_nested=False, to_file=os.path.join(OUTPUT['model'], 'discriminator.png'))
 
-dataset_reader = Reader(BATCH_SIZE, SHUFFLE, 'train.py', DATA_SAMPLE)
+dataset_reader = Reader(BATCH_SIZE, SHUFFLE, init, 'train.py', DATA_SAMPLE)
 train_dataset = dataset_reader.train_dataset
 test_dataset = dataset_reader.test_dataset
 
