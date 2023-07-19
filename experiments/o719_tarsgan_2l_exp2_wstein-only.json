@@ -7,8 +7,8 @@
     "sample_val": 5615,
 
     "params": {
-        "layers": 1,
-        "experimental_stride": null,
+        "layers": 2,
+        "experimental_stride": 2,
         "concat": true
     },
 
