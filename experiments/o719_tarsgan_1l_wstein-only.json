@@ -13,12 +13,12 @@
     },
 
     "gen_loss": {
-        "gen_gan": 1,
+        "gen_gan": 0,
         "gen_nll": 0,
-        "gen_l1": 100,
+        "gen_l1": 0,
         "gen_l2": 0,
         "gen_rmse": 0,
-        "gen_wstein": 0
+        "gen_wstein": 1
     },
 
     "disc_loss": {
@@ -27,4 +27,3 @@
     }
 
 }
-
