@@ -45,7 +45,10 @@ class GAN:
             blockinput = x
             for i in range(3):
                 l1input = x
-                x = layers.dense_block()(x)
+                if self.PARAMS['experimental_stride'] is not None:
+                    x = layers.experimental_dense_block()(x)
+                else:
+                    x = layers.dense_block()(x)
                 l1input = layers.multiply_lambda(32)(l1input)
                 x = layers.multiply_lambda(32)(x)
                 l1noise = tf.keras.layers.GaussianNoise(stddev=0.1, batch_input_shape=(None,256, 256, 32))(x)

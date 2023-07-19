@@ -8,6 +8,7 @@
 
     "params": {
         "layers": 16,
+        "experimental_stride": null,
         "concat": true
     },
 

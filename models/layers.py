@@ -151,6 +151,16 @@ def dense_block(kernel_size:int=3, filters:int=32, stride:int=1):
     return result
 
 
+def experimental_dense_block(kernel_size:int=3, filters:int=32, stride:int=2):
+    result = tf.keras.Sequential()
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
+    result.add(conv(kernel_size, filters, 1, batchnorm=False, lrelu=True))
+    result.add(deconv(kernel_size, filters, stride, batchnorm=False, relu=True, dropout=None))
+    result.add(deconv(kernel_size, filters, stride, batchnorm=False, relu=False, dropout=None))
+    return result
+
+
 # From SR-GAN
 class PReLU(tf.keras.layers.Layer):
     def __init__(self, alpha_initializer, **kwargs):
