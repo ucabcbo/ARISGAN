@@ -1,0 +1,26 @@
+{
+    "model_name": "dmnet",
+    "dataset": "alt6",
+    "tilesize": 256,
+    "batch_size": 16,
+    "shuffle": true,
+    "steps": 40000,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gen_gan": 1,
+        "gen_nll": 0,
+        "gen_l1": 100,
+        "gen_l2": 0,
+        "gen_rmse": 0,
+        "gen_wstein": 0
+    },
+
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": 0
+    }
+
+}

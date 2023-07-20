@@ -1,15 +1,15 @@
 import sys
 import os
 sys.path.append(os.getcwd())
-import init
+import environment
 
-from dataset.reader import Reader
+from dataset import Reader
 import tensorflow as tf
 from tensorflow.keras.applications import VGG19
 import numpy as np
 import os
 
-if init.ENVIRONMENT == 'blaze':
+if environment.ENVIRONMENT == 'blaze':
     import subprocess
 
     command = 'source /usr/local/cuda/CUDA_VISIBILITY.csh'
@@ -32,8 +32,8 @@ if init.ENVIRONMENT == 'blaze':
 
 
 # Set the image dimensions and batch size
-image_height = init.TILESIZE
-image_width = init.TILESIZE
+image_height = environment.TILESIZE
+image_width = environment.TILESIZE
 
 batch_size = 1
 epochs = 10
@@ -47,8 +47,8 @@ class DataGenerator(tf.keras.utils.Sequence):
         # self.tfrecord_files = [f for f in os.listdir(init.TRAIN_DIR) if f.endswith('.tfrecord')]
 
         dataset = Reader(256, self.image_height, self.image_width,
-                         init.TRAIN_DIR,
-                         init.VAL_DIR,
+                         environment.TRAIN_DIR,
+                         environment.VAL_DIR,
                          batch_size,
                          False,
                          caller='train_vgg',
@@ -104,4 +104,4 @@ model.fit(
     epochs=epochs
 )
 
-model.save(f'vgg/ckpt/VGG_{init.TIMESTAMP}')
+model.save(f'vgg/ckpt/VGG_{environment.TIMESTAMP}')

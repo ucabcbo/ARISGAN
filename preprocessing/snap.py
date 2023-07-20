@@ -22,7 +22,7 @@ from snappy import jpy
 HashMap = snappy.jpy.get_type('java.util.HashMap')
 
 sys.path.append('../')
-import sis_toolbox as tbx
+import toolbox as tbx
 import preprocessing.snap_toolbox as stbx
 
 from datetime import datetime

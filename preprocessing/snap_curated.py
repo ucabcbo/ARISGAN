@@ -1,6 +1,6 @@
 import sys
 sys.path.append('..')
-import init
+import environment
 
 import os
 import sys
@@ -13,10 +13,10 @@ from snappy import jpy
 HashMap = snappy.jpy.get_type('java.util.HashMap')
 
 sys.path.append('../')
-import sis_toolbox as tbx
+import toolbox as tbx
 import preprocessing.snap_toolbox as stbx
 
-img_pairs_inventory = pd.read_csv(os.path.join(init.DATA_ROOT, 'inventory/img_pairs.csv'), index_col='index')
+img_pairs_inventory = pd.read_csv(os.path.join(environment.DATA_ROOT, 'inventory/img_pairs.csv'), index_col='index')
 
 # Taking the first one out as this has done in ipynb as test run
 # curated_pairs = [34,
@@ -49,9 +49,9 @@ for i in range(len(curated_pairs)):
     s3_polygon = stbx.get_metadata_polygon(s3_raw, 's3')
 
     tile_list, quality_list = stbx.cut_tiles(collocated,
-                                            tilesize=init.TILESIZE,
+                                            tilesize=environment.TILESIZE,
                                             file_index=img_index,
-                                            output_path=init.DATA_ROOT,
+                                            output_path=environment.DATA_ROOT,
                                             save_if_errors=False,
                                             ensure_intersect_with=[s2_polygon,s3_polygon],
                                             cloud_threshold=1.0)

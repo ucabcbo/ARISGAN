@@ -5,31 +5,28 @@ import tensorflow as tf
 sys.path.append(os.getcwd())
 import models.layers as layers
 import models.losses as losses
-
+from experiment import Experiment
 
 class GAN:
     
-    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init):
+    def __init__(self, experiment:Experiment):
 
-        self.OUTPUT = OUTPUT
-        self.PARAMS = PARAMS
-        self.GEN_LOSS = GEN_LOSS
-        self.DISC_LOSS = DISC_LOSS
+        self.exp = experiment
 
-        self.generator = self.Generator(init)
-        self.discriminator = self.Discriminator(init)
+        self.generator = self.Generator()
+        self.discriminator = self.Discriminator()
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
         self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-
-        self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
+        
+        self.summary_writer = tf.summary.create_file_writer(self.exp.output.LOGS)
         
 
-    def Generator(self, init):
+    def Generator(self):
         
-        inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
+        inputs = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS])
 
         x = inputs                                                          # 256,256,21
 
@@ -75,10 +72,10 @@ class GAN:
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
-    def Discriminator(self, init):
+    def Discriminator(self):
 
-        inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
-        tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
+        inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
+        tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
         x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
 
@@ -109,8 +106,8 @@ class GAN:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.GEN_LOSS, self.loss_object)
-            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.DISC_LOSS, self.loss_object)
+            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.exp.GEN_LOSS, self.loss_object)
+            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.exp.DISC_LOSS, self.loss_object)
 
         generator_gradients = gen_tape.gradient(total_gen_loss, generator.trainable_variables)
         discriminator_gradients = disc_tape.gradient(total_disc_loss, discriminator.trainable_variables)

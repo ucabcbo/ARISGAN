@@ -1,15 +1,15 @@
 import sys
 import os
 sys.path.append(os.getcwd())
-import init
+import environment
 
-from dataset.reader import Reader
+from dataset import Reader
 import tensorflow as tf
 from tensorflow.keras.applications import VGG19
 import numpy as np
 import os
 
-if init.ENVIRONMENT == 'blaze':
+if environment.ENVIRONMENT == 'blaze':
     import subprocess
 
     command = 'source /usr/local/cuda/CUDA_VISIBILITY.csh'

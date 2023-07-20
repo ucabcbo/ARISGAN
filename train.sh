@@ -29,22 +29,17 @@ module list
 
 nvidia-smi
 
-# Your work should be done in $TMPDIR 
-# cd $TMPDIR
 
-# Run the application and put the output into a file called date.txt
 datetime=$(date +'%m%d-%H%M%S')
 outputfolder="/home/ucabcbo/output/"$datetime"_"$1"/"
 mkdir $outputfolder
 
 source /home/ucabcbo/sis2/venv/bin/activate
 if [ -z "$2" ]; then
-    python /home/ucabcbo/sis2/train.py --exp $1 --out $outputfolder > $outputfolder"nohup.out"
+    # python /home/ucabcbo/sis2/train.py --exp $1 --out $outputfolder > $outputfolder"nohup.out"
 else
-    python /home/ucabcbo/sis2/train.py --exp $1 --restore $2 --out $outputfolder > $outputfolder"nohup.out"
+    # python /home/ucabcbo/sis2/train.py --exp $1 --restore $2 --out $outputfolder > $outputfolder"nohup.out"
 fi
 
-# Preferably, tar-up (archive) all output files onto the shared scratch area
-tar -zcvf $HOME/Scratch/workspace/files_from_job_$JOB_ID.tar.gz $TMPDIR
-
-# Make sure you have given enough time for the copy to complete!
+# archive all output files onto the shared scratch area
+# tar -zcvf $HOME/Scratch/workspace/files_from_job_$JOB_ID.tar.gz $TMPDIR

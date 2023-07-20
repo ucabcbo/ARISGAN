@@ -13,7 +13,7 @@ HashMap = snappy.jpy.get_type('java.util.HashMap')
 
 import sys
 sys.path.append('../')
-import sis_toolbox as tbx
+import toolbox as tbx
 
 
 def band_subset(raw, bands):

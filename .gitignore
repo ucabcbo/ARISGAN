@@ -1,11 +1,14 @@
 environment.json
-environment_alt.json
 data/
-data_alt/
 output/
 training_checkpoints/
+ckpt/
 nohup/
+logs/
+samples/
+model/
 vgg/ckpt/
+archive/
 
 # snap-created directory on cpom:
 ?/

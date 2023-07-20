@@ -7,8 +7,8 @@ import tensorflow as tf
 
 import sys
 sys.path.append('./')
-import sis_toolbox as tbx
-from sis_toolbox import RGBProfile as rgb
+import toolbox as tbx
+from toolbox import RGBProfile as rgb
 
 # PATH = '/Users/christianboehm/projects/sis2/data'
 PATH = '/home/cb/sis2/data/'

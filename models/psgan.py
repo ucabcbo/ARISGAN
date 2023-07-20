@@ -5,37 +5,28 @@ import tensorflow as tf
 sys.path.append(os.getcwd())
 import models.layers as layers
 import models.losses as losses
-
+from experiment import Experiment
 
 class GAN:
     
-    def __init__(self, OUTPUT, PARAMS, GEN_LOSS, DISC_LOSS, init):
+    def __init__(self, experiment:Experiment):
 
-        self.OUTPUT = OUTPUT
-        self.PARAMS = PARAMS
-        self.GEN_LOSS = GEN_LOSS
-        self.DISC_LOSS = DISC_LOSS
+        self.exp = experiment
 
-        self.generator = self.Generator(init)
-        self.discriminator = self.Discriminator(init)
+        self.generator = self.Generator()
+        self.discriminator = self.Discriminator()
         
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
         self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=False)
-
-        self.summary_writer = tf.summary.create_file_writer(self.OUTPUT['logs'])
-
-        self.checkpoint = tf.train.Checkpoint(
-            generator_optimizer=self.generator_optimizer,
-            discriminator_optimizer=self.discriminator_optimizer,
-            generator=self.generator,
-            discriminator=self.discriminator)
-
-
-    def Generator(self, init):
         
-        inputs = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS])
+        self.summary_writer = tf.summary.create_file_writer(self.exp.output.LOGS)
+        
+
+    def Generator(self):
+        
+        inputs = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS])
 
         x = inputs
 
@@ -68,7 +59,7 @@ class GAN:
         x = layers.lrelu()(x)
 
         #decoder_9
-        if self.PARAMS['dropouts']:
+        if self.exp.PARAMS.get('dropouts', False):
             x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=0.5)(x)   # 128x128x128
         else:
             x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)   # 128x128x128
@@ -80,7 +71,7 @@ class GAN:
         #decoder_10
         x = layers.conv(3, 128, 1, lrelu=True, batchnorm=False)(x)    # 128x128x128
         #decoder_11
-        if self.PARAMS['dropouts']:
+        if self.exp.PARAMS.get('dropouts', False):
             x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=0.5)(x)       # 256x256x128
         else:
             x = layers.deconv(2, 128, 2, relu=False, batchnorm=False, dropout=None)(x)       # 256x256x128
@@ -91,16 +82,16 @@ class GAN:
         #decoder_12
         x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)     # 256x256x64
         #decoder_13
-        x = layers.conv(3, init.OUTPUT_CHANNELS, 1, lrelu=False, batchnorm=False)(x)    # 256x256xOUTPUT_CHANNELS
+        x = layers.conv(3, self.exp.OUTPUT_CHANNELS, 1, lrelu=False, batchnorm=False)(x)    # 256x256xOUTPUT_CHANNELS
 
         last = tf.keras.layers.ReLU()(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
-    def Discriminator(self, init):
-        inp = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.INPUT_CHANNELS], name='input_image')
-        tar = tf.keras.layers.Input(shape=[init.IMG_HEIGHT, init.IMG_WIDTH, init.OUTPUT_CHANNELS], name='target_image')
+    def Discriminator(self):
+        inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
+        tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
         # input = tf.concat([inp, tar], 3)  # 128*128*8
         inputs = tf.keras.layers.Concatenate(axis=3)([inp, tar]) # 256x256x24
@@ -136,8 +127,8 @@ class GAN:
             disc_real_output = discriminator([input_image, target], training=True)
             disc_generated_output = discriminator([input_image, gen_output], training=True)
 
-            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.GEN_LOSS, self.loss_object)
-            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.DISC_LOSS, self.loss_object)
+            total_gen_loss, gen_losses = losses.generator_loss(disc_generated_output, gen_output, target, self.exp.GEN_LOSS, self.loss_object)
+            total_disc_loss, disc_losses = losses.discriminator_loss(disc_real_output, disc_generated_output, self.exp.DISC_LOSS, self.loss_object)
 
         generator_gradients = gen_tape.gradient(total_gen_loss, generator.trainable_variables)
         discriminator_gradients = disc_tape.gradient(total_disc_loss, discriminator.trainable_variables)
@@ -152,7 +143,3 @@ class GAN:
             tf.summary.scalar('total_disc_loss', total_disc_loss, step=step//1000)
             for disc_loss in list(disc_losses.keys()):
                 tf.summary.scalar(disc_loss, disc_losses[disc_loss], step=step//1000)
-
-    def save(self):
-        self.checkpoint.save(file_prefix=self.OUTPUT['ckpt'])
-
