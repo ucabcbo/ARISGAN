@@ -21,13 +21,17 @@ echo -e "Experiment:\t\t"$3
 echo -e "Restore Checkpoint:\t"$4
 echo "================================================"
 
+experiment_root=$(grep -o '"experiment_root":[[:space:]]*"[^"]*"' environment.json | awk -F '"' '{print $4}')
+experiment_path=$experiment_root$3"/experiment.json"
+working_dir=$experiment_root$3"/nohup"
+mkdir $working_dir
 
-experiment_path="/home/ucabcbo/sis2/experiments/"$3".json"
+job_name=$(echo "$3" | tr '/' '_')
 
 if test -f "$experiment_path"; then
     cd "/home/ucabcbo/sis2/"
-    echo "qsub -N "$3" -l h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G -m es train.sh "$3" "$4
-    qsub -N $3 -l "h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G" -m es train.sh $3 $4
+    echo "qsub -N "$job_name" -l h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G -wd $working_dir -m es train.sh "$3" "$4
+    qsub -N $job_name -l "h_rt="$duration_str",mem="$2"G,gpu=1,tmpfs=100G" -wd $working_dir -m es train.sh $3 $4
 else
     echo "File does not exist: "$experiment_path
 fi
