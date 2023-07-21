@@ -18,9 +18,8 @@ import preprocessing.snap_toolbox as stbx
 
 img_pairs_inventory = pd.read_csv(os.path.join(environment.DATA_ROOT, 'inventory/img_pairs.csv'), index_col='index')
 
-# Taking the first one out as this has done in ipynb as test run
-# curated_pairs = [34,
-curated_pairs = [41,
+curated_pairs = [34,
+                 41,
                  47,
                  77,
                  81,
