@@ -20,7 +20,7 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
         total_gen_loss = (total_gen_loss + (wgt_gen_nll * nll_loss)) if total_gen_loss is not None else wgt_gen_nll * nll_loss
         gen_losses['gen_nll'] = nll_loss
 
-    wgt_gen_ssim = GEN_LOSS.get('gen_ssim', 0)
+    wgt_gen_ssim = GEN_LOSS.get('gen_ssim', None)
     if wgt_gen_ssim is not None:
         ssim_loss = tf.reduce_mean(1 - tf.image.ssim(target, gen_output, max_val=1.0))
         total_gen_loss = (total_gen_loss + (wgt_gen_ssim * ssim_loss)) if total_gen_loss is not None else wgt_gen_ssim * ssim_loss
