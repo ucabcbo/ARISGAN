@@ -172,6 +172,7 @@ def fit(train_ds, test_ds, steps):
                                     example_inputs,
                                     example_targets,
                                     showimg=False,
+                                    ROOTPATH_IMGS=os.path.join(exp.EXPERIMENT_ROOT, '_samples/'),
                                     PATH_IMGS=exp.output.SAMPLES,
                                     model_name=f'{exp.STRINGNAME}_{a.timestamp}',
                                     iteration=(step + stepoffset + 1))
@@ -180,6 +181,7 @@ def fit(train_ds, test_ds, steps):
                                     example_inputs,
                                     example_targets,
                                     showimg=False,
+                                    ROOTPATH_IMGS=os.path.join(exp.EXPERIMENT_ROOT, '_samples/'),
                                     PATH_IMGS=exp.output.SAMPLES,
                                     model_name=f'{exp.STRINGNAME}_{a.timestamp}',
                                     iteration=(step + stepoffset + 1))

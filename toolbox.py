@@ -210,12 +210,11 @@ def parse_tfrecord_alt(tfrecord, tilesize):
     return raw_s2, raw_s2_alt
 
 
-def generate_images(model, example_input, example_target, num_images=5, showimg=True, PATH_IMGS=None, model_name=None, iteration=None):
+def generate_images(model, example_input, example_target, num_images=5, showimg=True, ROOTPATH_IMGS=None, PATH_IMGS=None, model_name=None, iteration=None):
 
     import os
     from matplotlib import pyplot as plt
 
-    #TODO: training True or False!?
     prediction = model(example_input, training=False)
 
     num_images = min(num_images, len(example_input))
@@ -241,17 +240,19 @@ def generate_images(model, example_input, example_target, num_images=5, showimg=
     plt.tight_layout()
     if PATH_IMGS is not None:
         plt.savefig(os.path.join(PATH_IMGS, f'{model_name}_{iteration:05d}.png'))
-        plt.close()
+    if ROOTPATH_IMGS is not None:
+        plt.savefig(os.path.join(ROOTPATH_IMGS, f'{model_name}.png'))
     if showimg:
         plt.show()
+    else:
+        plt.close()
     
 
-def generate_images_alt(model, example_input, example_target, num_images=5, showimg=True, PATH_IMGS=None, model_name=None, iteration=None):
+def generate_images_alt(model, example_input, example_target, num_images=5, showimg=True, ROOTPATH_IMGS=None, PATH_IMGS=None, model_name=None, iteration=None):
 
     import os
     from matplotlib import pyplot as plt
 
-    #TODO: training True or False!?
     prediction = model(example_input, training=False)
 
     num_images = min(num_images, len(example_input))
@@ -277,6 +278,10 @@ def generate_images_alt(model, example_input, example_target, num_images=5, show
     plt.tight_layout()
     if PATH_IMGS is not None:
         plt.savefig(os.path.join(PATH_IMGS, f'{model_name}_{iteration:05d}.png'))
-        plt.close()
+    if ROOTPATH_IMGS is not None:
+        plt.savefig(os.path.join(ROOTPATH_IMGS, f'{model_name}.png'))
     if showimg:
         plt.show()
+    else:
+        plt.close()
+

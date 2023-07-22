@@ -9,6 +9,7 @@ samples/
 model/
 vgg/ckpt/
 archive/
+_samples/
 
 # snap-created directory on cpom:
 ?/
