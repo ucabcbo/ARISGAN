@@ -147,9 +147,10 @@ def dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=1):
     previous_xs = [input_tensor]
     for _ in range(4):
         x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
+        temp = x
         for previous_x in previous_xs:
             x = tf.keras.layers.concatenate([x, previous_x])
-        previous_xs.append(x)
+        previous_xs.append(temp)
 
     x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=False)(x)
 
@@ -159,24 +160,23 @@ def dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=1):
 def experimental_dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=2):
 
     x = input_tensor
-    previous_xs = [input_tensor]
-    for _ in range(2):
+    previous_ups = [input_tensor]
+    previous_downs = []
+
+    for _ in range(3):
         x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
-        for previous_x in previous_xs:
-            x = tf.keras.layers.concatenate([x, previous_x])
-        previous_xs.append(x)
+        temp = x
+        for previous_down in previous_downs:
+            x = tf.keras.layers.concatenate([x, previous_down])
+        previous_downs.append(temp)
 
-    x = conv(kernel_size, filters, 1, batchnorm=False, lrelu=True)
-    for previous_x in previous_xs:
-        x = tf.keras.layers.concatenate([x, previous_x])
-    previous_xs.append(x)
+        x = deconv(kernel_size, filters, stride, batchnorm=False, relu=True, dropout=0.5)(x)
+        temp = x
+        for previous_up in previous_ups:
+            x = tf.keras.layers.concatenate([x, previous_up])
+        previous_ups.append(temp)
 
-    x = deconv(kernel_size, filters, stride, batchnorm=False, relu=True, dropout=None)
-    for previous_x in previous_xs:
-        x = tf.keras.layers.concatenate([x, previous_x])
-    previous_xs.append(x)
-
-    x = deconv(kernel_size, filters, stride, batchnorm=False, relu=False, dropout=None)
+    x = conv(kernel_size, filters, 1, batchnorm=False, lrelu=False)(x)
     
     return x
 
