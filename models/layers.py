@@ -141,11 +141,11 @@ def residual_block_dsen2(kernel_size: int = 3, filters: int = 64, stride: int = 
 
 
 # From TARSGAN
-def dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=1):
+def dense_block(input_tensor, layers:int=5, kernel_size:int=3, filters:int=32, stride:int=1):
 
     x = input_tensor
     previous_xs = [input_tensor]
-    for _ in range(4):
+    for _ in range(max(layers-1, 1)):
         x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
         temp = x
         for previous_x in previous_xs:
@@ -157,13 +157,13 @@ def dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=1):
     return x
 
 
-def experimental_dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=2):
+def experimental_dense_block(input_tensor, layers:int=4, kernel_size:int=3, filters:int=32, stride:int=2):
 
     x = input_tensor
     previous_ups = [input_tensor]
     previous_downs = []
 
-    for _ in range(3):
+    for _ in range(max(layers-1, 1)):
         x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
         temp = x
         for previous_down in previous_downs:
@@ -178,6 +178,75 @@ def experimental_dense_block(input_tensor, kernel_size:int=3, filters:int=32, st
 
     x = conv(kernel_size, filters, 1, batchnorm=False, lrelu=False)(x)
     
+    return x
+
+
+# Based on SRS3
+def sis2_dense_multireceptive_field(input_tensor, kernel_sizes, filters):
+
+    results = []
+    for kernel_size in kernel_sizes:
+        x1 = conv(kernel_size, filters, 1, batchnorm=False, lrelu=False)(input_tensor)
+        x1 = relu()(x1)
+        results.append(x1)
+
+    x = tf.keras.layers.concatenate(results)
+
+    return x
+
+
+def sis2_pix2pix(input_tensor, pxshape, output_channels):
+
+    x = input_tensor
+
+    if pxshape >= 256:
+        x = conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
+        skip128 = x
+
+    if pxshape >= 128:
+        x = conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
+        skip64 = x
+
+    if pxshape >= 64:
+        x = conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
+        skip32 = x
+
+    x = conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
+    skip16 = x
+    x = conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
+    skip8 = x
+    x = conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
+    skip4 = x
+    x = conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
+    skip2 = x
+    x = conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+
+    x = deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
+    x = tf.keras.layers.concatenate([x, skip2])
+
+    x = deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 4,4,512/1024
+    x = tf.keras.layers.concatenate([x, skip4])
+
+    x = deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
+    x = tf.keras.layers.concatenate([x, skip8])
+
+    x = deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
+    x = tf.keras.layers.concatenate([x, skip16])
+
+    if pxshape >= 64:
+        x = deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
+        x = tf.keras.layers.concatenate([x, skip32])
+
+    if pxshape >= 128:
+        x = deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
+        x = tf.keras.layers.concatenate([x, skip64])
+
+    if pxshape >= 256:
+        x = deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
+        x = tf.keras.layers.concatenate([x, skip128])
+
+    x = deconv(4, output_channels, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+
     return x
 
 

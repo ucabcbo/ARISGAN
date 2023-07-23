@@ -30,53 +30,16 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        if self.exp.TILESIZE >= 256:
-            x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)           # 128,128,64
-            skip128 = x
+        x = layers.dense_block(x)
 
-        if self.exp.TILESIZE >= 128:
-            x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)           # 64,64,128
-            skip64 = x
+        x = layers.sis2_dense_multireceptive_field(x, kernel_sizes=[5, 9, 13], filters=64)
+        concat_x = x
 
-        if self.exp.TILESIZE >= 64:
-            x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)           # 32,32,256
-            skip32 = x
+        x = layers.sis2_pix2pix(x, self.exp.TILESIZE, 64)
 
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 16,16,512
-        skip16 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 8,8,512
-        skip8 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 4,4,512
-        skip4 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 2,2,512
-        skip2 = x
-        x = layers.conv(4, 512, 2, lrelu=True, batchnorm=True)(x)           # 1,1,512
+        x = tf.keras.layers.Concatenate()([x, concat_x])
 
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 2,2,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip2])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 4,4,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip4])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=0.5)(x)   # 8,8,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip8])
-
-        x = layers.deconv(4, 512, 2, relu=True, batchnorm=True, dropout=None)(x)  # 16,16,512/1024
-        x = tf.keras.layers.Concatenate()([x, skip16])
-
-        if self.exp.TILESIZE >= 64:
-            x = layers.deconv(4, 256, 2, relu=True, batchnorm=True, dropout=None)(x)  # 32,32,256/512
-            x = tf.keras.layers.Concatenate()([x, skip32])
-
-        if self.exp.TILESIZE >= 128:
-            x = layers.deconv(4, 128, 2, relu=True, batchnorm=True, dropout=None)(x)  # 64,64,128/256
-            x = tf.keras.layers.Concatenate()([x, skip64])
-
-        if self.exp.TILESIZE >= 256:
-            x = layers.deconv(4, 64, 2, relu=True, batchnorm=True, dropout=None)(x)  # 128,128,64/128
-            x = tf.keras.layers.Concatenate()([x, skip128])
-
-        last = layers.deconv(4, self.exp.OUTPUT_CHANNELS, 2, relu=False, batchnorm=False, dropout=None, activation='tanh')(x)    # 256,256,3
+        last = layers.conv(1, self.exp.OUTPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
