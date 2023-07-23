@@ -141,24 +141,44 @@ def residual_block_dsen2(kernel_size: int = 3, filters: int = 64, stride: int = 
 
 
 # From TARSGAN
-def dense_block(kernel_size:int=3, filters:int=32, stride:int=1):
-    result = tf.keras.Sequential()
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=False))
-    return result
+def dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=1):
+
+    x = input_tensor
+    previous_xs = [input_tensor]
+    for _ in range(4):
+        x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
+        for previous_x in previous_xs:
+            x = tf.keras.layers.concatenate([x, previous_x])
+        previous_xs.append(x)
+
+    x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=False)(x)
+
+    return x
 
 
-def experimental_dense_block(kernel_size:int=3, filters:int=32, stride:int=2):
-    result = tf.keras.Sequential()
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, stride, batchnorm=False, lrelu=True))
-    result.add(conv(kernel_size, filters, 1, batchnorm=False, lrelu=True))
-    result.add(deconv(kernel_size, filters, stride, batchnorm=False, relu=True, dropout=None))
-    result.add(deconv(kernel_size, filters, stride, batchnorm=False, relu=False, dropout=None))
-    return result
+def experimental_dense_block(input_tensor, kernel_size:int=3, filters:int=32, stride:int=2):
+
+    x = input_tensor
+    previous_xs = [input_tensor]
+    for _ in range(2):
+        x = conv(kernel_size, filters, stride, batchnorm=False, lrelu=True)(x)
+        for previous_x in previous_xs:
+            x = tf.keras.layers.concatenate([x, previous_x])
+        previous_xs.append(x)
+
+    x = conv(kernel_size, filters, 1, batchnorm=False, lrelu=True)
+    for previous_x in previous_xs:
+        x = tf.keras.layers.concatenate([x, previous_x])
+    previous_xs.append(x)
+
+    x = deconv(kernel_size, filters, stride, batchnorm=False, relu=True, dropout=None)
+    for previous_x in previous_xs:
+        x = tf.keras.layers.concatenate([x, previous_x])
+    previous_xs.append(x)
+
+    x = deconv(kernel_size, filters, stride, batchnorm=False, relu=False, dropout=None)
+    
+    return x
 
 
 # From SR-GAN

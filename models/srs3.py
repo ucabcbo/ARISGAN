@@ -19,7 +19,7 @@ class GAN:
         self.generator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
         
-        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=False)
+        self.loss_object = tf.keras.losses.BinaryCrossentropy(from_logits=True)
         
         self.summary_writer = tf.summary.create_file_writer(self.exp.output.LOGS)
         
@@ -30,50 +30,58 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        #TODO: all parameters tbc against original DSen2 paper
-        x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)
+        x1 = layers.conv(5, 64, 1, batchnorm=False, lrelu=False)(x)
+        x1 = layers.relu()(x1)
 
-        for i in range(self.exp.PARAMS.get('layers', 12)):
-            mem = x
-            x = layers.residual_block_dsen2(3, 64, 1)(x)
-            x = tf.keras.layers.Add()([x, mem])
+        x2 = layers.conv(9, 64, 1, batchnorm=False, lrelu=False)(x)
+        x2 = layers.relu()(x2)
 
-        x = layers.conv(3, self.exp.INPUT_CHANNELS, 1, lrelu=True, batchnorm=False)(x)
-        
-        #TODO: meaningful in my setting as last layer?
-        x = tf.keras.layers.Add()([x, inputs])
-        #TODO: added to get to 3 channels
-        last = layers.conv(3, self.exp.OUTPUT_CHANNELS, 1, lrelu=False, batchnorm=False)(x)
+        x3 = layers.conv(13, 64, 1, batchnorm=False, lrelu=False)(x)
+        x3 = layers.relu()(x3)
+
+        x = tf.keras.layers.Concatenate()([x1, x2, x3])
+        multix = x
+
+        x = tf.keras.layers.AvgPool2D()(x)
+        x = layers.conv(1, 16, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
+        x = layers.conv(1, 192, 1, batchnorm=False, lrelu=False)(x)
+        x = tf.keras.layers.Softmax()(x)
+
+        # Added to make dimensions match
+        x = layers.deconv(1, 192, 2, batchnorm=False, relu=False, dropout=None)(x)
+
+        x = tf.keras.layers.Multiply()([x, multix])
+        x = tf.keras.layers.Add()([x, multix])
+
+        x = layers.conv(1, 32, 1, batchnorm=False, lrelu=False)(x)
+        x = layers.relu()(x)
+
+        last = layers.conv(5, self.exp.OUTPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
         
 
     def Discriminator(self):
 
+        # Not described, using Pix2Pix discriminator
+
         inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
         x = tf.keras.layers.Concatenate()([inp, tar])  # 256,256,24
 
-        x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)   # 256,256,64
-        x = layers.conv(3, 64, 2, lrelu=True, batchnorm=True)(x)    # 64,64,64
+        x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)   # 128,128,64
+        x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)   # 64,64,128
+        x = layers.conv(4, 256, 2, lrelu=True, batchnorm=True)(x)   # 32,32,256
 
-        x = layers.conv(3, 128, 1, lrelu=True, batchnorm=True)(x)   # 64,64,128
-        x = layers.conv(3, 128, 2, lrelu=True, batchnorm=True)(x)   # 32,32,128
+        x = tf.keras.layers.ZeroPadding2D()(x)                      # 34,34,256
+        x = layers.conv(4, 512, 1, lrelu=False, batchnorm=False, padding='valid')(x) # 31,31,512
+        x = layers.batchnorm()(x)                                   # 31,31,512
+        x = layers.lrelu()(x)                                       # 31,31,512
+        x = tf.keras.layers.ZeroPadding2D()(x)                      # 30,30,1
 
-        x = layers.conv(3, 256, 1, lrelu=True, batchnorm=True)(x)   # 32,32,256
-        x = layers.conv(3, 256, 2, lrelu=True, batchnorm=True)(x)   # 16,16,256
-
-        x = layers.conv(3, 512, 1, lrelu=True, batchnorm=True)(x)   # 16,16,512
-        x = layers.conv(3, 512, 2, lrelu=True, batchnorm=True)(x)   # 8,8,512
-
-        x = layers.conv(3, 1024, 1, lrelu=True, batchnorm=True)(x)   # 16,16,512
-        x = layers.conv(3, 1024, 2, lrelu=True, batchnorm=True)(x)   # 8,8,512
-
-        x = tf.keras.layers.Dense(1024)(x)
-        x = layers.lrelu()(x)
-        x = tf.keras.layers.Dense(10)(x)
-        last = layers.sigmoid()(x)
+        last = layers.conv(4, 1, 1, lrelu=False, batchnorm=False, padding='valid')(x)                   # 30,30,1
 
         return tf.keras.Model(inputs=[inp, tar], outputs=last)
     

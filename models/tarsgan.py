@@ -37,16 +37,16 @@ class GAN:
             for i in range(3):
                 l1input = x
                 if self.exp.PARAMS.get('experimental_stride', None) is not None:
-                    x = layers.experimental_dense_block()(x)
+                    x = layers.experimental_dense_block(x)
                 else:
-                    x = layers.dense_block()(x)
+                    x = layers.dense_block(x)
                 l1input = layers.multiply_lambda(32)(l1input)
                 x = layers.multiply_lambda(32)(x)
                 l1noise = tf.keras.layers.GaussianNoise(stddev=0.1, batch_input_shape=(None,256, 256, 32))(x)
                 l1noise = layers.multiply_lambda(32)(l1noise)
-                x = tf.keras.layers.add([l1input, x, l1noise])
+                x = tf.keras.layers.Add()([l1input, x, l1noise])
             x = layers.multiply_lambda(32)(x)
-            x = tf.keras.layers.add([blockinput, x])
+            x = tf.keras.layers.Add()([blockinput, x])
 
         # l1noise = layers.multiply_layer(32)([l1noise, l1noise])
         # x = tf.keras.layers.add([l1input, x, l1noise])
@@ -54,7 +54,7 @@ class GAN:
 
         x = layers.conv(3, 32, 1, batchnorm=False, lrelu=False)(x)
         if self.exp.PARAMS.get('concat', True):
-            x = tf.keras.layers.concatenate([x, inputs])
+            x = tf.keras.layers.Concatenate()([x, inputs])
         last = layers.conv(3, self.exp.OUTPUT_CHANNELS, 1, batchnorm=False, lrelu=False)(x)
 
         return tf.keras.Model(inputs=inputs, outputs=last)
@@ -65,7 +65,7 @@ class GAN:
         inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
-        x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
+        x = tf.keras.layers.Concatenate()([inp, tar])  # 256,256,24
 
         x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)   # 128,128,64
         x = layers.conv(3, 64, 2, lrelu=True, batchnorm=True)(x)   # 128,128,64

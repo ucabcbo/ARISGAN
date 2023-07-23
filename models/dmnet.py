@@ -42,7 +42,7 @@ class GAN:
         split1_5 = layers.conv(5, 64, 1, batchnorm=False, lrelu=False)(x)
         split1_7 = layers.conv(7, 64, 1, batchnorm=False, lrelu=False)(x)
 
-        x = tf.keras.layers.concatenate([split1_3, split1_5, split1_7])
+        x = tf.keras.layers.Concatenate()([split1_3, split1_5, split1_7])
         x = layers.relu()(x)
         
         x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
@@ -59,13 +59,13 @@ class GAN:
         split2_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, dilation_rate=2, padding='same')(x)
         split2_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, dilation_rate=3, padding='same')(x)
 
-        x = tf.keras.layers.concatenate([split2_1, split2_2, split2_3])
+        x = tf.keras.layers.Concatenate()([split2_1, split2_2, split2_3])
         x = layers.relu()(x)
 
         x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
         x = layers.relu()(x)
 
-        x = tf.keras.layers.concatenate([source1, source2, x])
+        x = tf.keras.layers.Concatenate()([source1, source2, x])
         x = layers.relu()(x)
         x = layers.conv(3, 64, 1, batchnorm=False, lrelu=False)(x)
         x = layers.relu()(x)
@@ -79,7 +79,7 @@ class GAN:
         inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
-        x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
+        x = tf.keras.layers.Concatenate()([inp, tar])  # 256,256,24
 
         x = layers.conv(4, 64, 2, lrelu=True, batchnorm=False)(x)   # 128,128,64
         x = layers.conv(4, 128, 2, lrelu=True, batchnorm=True)(x)   # 64,64,128

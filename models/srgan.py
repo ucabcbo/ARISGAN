@@ -77,7 +77,7 @@ class GAN:
         inp = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.INPUT_CHANNELS], name='input_image')
         tar = tf.keras.layers.Input(shape=[self.exp.IMG_HEIGHT, self.exp.IMG_WIDTH, self.exp.OUTPUT_CHANNELS], name='target_image')
 
-        x = tf.keras.layers.concatenate([inp, tar])  # 256,256,24
+        x = tf.keras.layers.Concatenate()([inp, tar])  # 256,256,24
 
         x = layers.conv(3, 64, 1, lrelu=True, batchnorm=False)(x)   # 256,256,64
 
