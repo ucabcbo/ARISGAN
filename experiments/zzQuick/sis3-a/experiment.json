@@ -1,0 +1,29 @@
+{
+    "model_name": "sis3-a",
+    "dataset": "curated",
+    "tilesize": 256,
+    "batch_size": 1,
+    "shuffle": false,
+    "steps": 500,
+    "sample_train": 50,
+    "sample_val": 10,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gen_gan": null,
+        "gen_nll": null,
+        "gen_ssim": null,
+        "gen_l1": 100,
+        "gen_l2": null,
+        "gen_rmse": null,
+        "gen_wstein": 100
+    },
+
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": null
+    }
+
+}
