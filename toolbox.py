@@ -165,11 +165,21 @@ def save_tfrecord(raw_tiff, filepath):
 def save_tfrecord_alt(raw_tiff, filepath, downsample:int=6):
     import numpy as np
     import tensorflow as tf
+    from skimage.measure import block_reduce
 
     raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
     #TODO: adjust if tiff structure changes
     raw_s2 = raw_np[:,:,2:5]
-    array_85x85 = raw_s2[::downsample, ::downsample]
+
+    #ChatGPT MEAN downsampling:
+    # blocks = raw_s2.reshape(raw_s2.shape[0] // downsample, downsample,
+    #                         raw_s2.shape[1] // downsample, downsample)
+    # average_blocks = blocks.mean(axis=(1, 3))
+
+    downsampled_array = block_reduce(raw_s2, downsample, np.mean)
+
+    # array_85x85 = raw_s2[::downsample, ::downsample]
+    array_85x85 = downsampled_array
     expanded_array = np.kron(array_85x85, np.ones((downsample, downsample, 1)))
     cropped_array = expanded_array[:256, :256, :]
 
