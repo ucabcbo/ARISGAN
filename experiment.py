@@ -51,6 +51,9 @@ class Experiment:
         self.IMG_HEIGHT:int = experiment.get('img_height', self.TILESIZE)
         self.IMG_WIDTH:int = experiment.get('img_width', self.TILESIZE)
 
+        self.RANDOM_RESIZE:float = experiment.get('random_resize', 1.11)
+        self.RANDOM_ROTATE:bool = experiment.get('random_rotate', False)
+
         self.BATCH_SIZE:int = experiment.get('batch_size', 16)
         self.SHUFFLE:bool = experiment.get('shuffle', True)
         self.STEPS:int = experiment.get('steps', 40000)

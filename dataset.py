@@ -76,12 +76,18 @@ class Reader():
 
     @tf.function()
     def random_jitter(self, s2_image, s3_image):
+
         # Resizing to 286x286
-        s2_image, s3_image = self.resize(s2_image, s3_image, int(self.exp.IMG_HEIGHT * 1.11), int(self.exp.IMG_WIDTH * 1.11))
+        s2_image, s3_image = self.resize(s2_image, s3_image, int(self.exp.IMG_HEIGHT * self.exp.RANDOM_RESIZE), int(self.exp.IMG_WIDTH * self.exp.RANDOM_RESIZE))
         
         # Random cropping back to 256x256
         s2_image, s3_image = self.random_crop(s2_image, s3_image)
         
+        if self.exp.RANDOM_ROTATE:
+            k = tf.random.uniform((), minval=0, maxval=3, dtype=tf.int32)
+            s2_image = tf.image.rot90(s2_image, k=k)
+            s3_image = tf.image.rot90(s3_image, k=k)
+
         if tf.random.uniform(()) > 0.5:
             # Random mirroring
             s2_image = tf.image.flip_left_right(s2_image)
