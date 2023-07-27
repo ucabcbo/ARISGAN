@@ -176,7 +176,11 @@ def save_tfrecord_alt(raw_tiff, filepath, downsample:int=6):
     #                         raw_s2.shape[1] // downsample, downsample)
     # average_blocks = blocks.mean(axis=(1, 3))
 
-    downsampled_array = block_reduce(raw_s2, downsample, np.mean)
+    # downsampled_array = block_reduce(raw_s2, downsample, np.mean)
+    c1 = block_reduce(raw_s2[:,:,0], downsample, np.mean)
+    c2 = block_reduce(raw_s2[:,:,1], downsample, np.mean)
+    c3 = block_reduce(raw_s2[:,:,2], downsample, np.mean)
+    downsampled_array = np.stack([c1, c2, c3], axis=2)
 
     # array_85x85 = raw_s2[::downsample, ::downsample]
     array_85x85 = downsampled_array

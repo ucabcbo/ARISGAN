@@ -52,6 +52,7 @@ class Experiment:
         self.IMG_WIDTH:int = experiment.get('img_width', self.TILESIZE)
 
         self.RANDOM_RESIZE:float = experiment.get('random_resize', 1.11)
+        #TODO: make random rotations the default
         self.RANDOM_ROTATE:bool = experiment.get('random_rotate', False)
 
         self.BATCH_SIZE:int = experiment.get('batch_size', 16)

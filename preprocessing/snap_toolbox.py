@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
+import random
 from shapely.geometry import Polygon
 
 import snappy
@@ -200,6 +201,101 @@ def cut_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, e
                 tile_inventory.at[tile_index, 'error'] = str(e)
                 tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
                 continue
+    
+    tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
+
+    return tile_list, quality_list
+
+
+def cut_random_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, ensure_intersect_with=[], intersect_threshold=0.95, cloud_threshold=1.0, tile_ratio=0.75):
+    tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'clouds', 'intersect', 's3black', 'error', 'filename'])
+
+    file_index = f'{file_index:05d}'
+
+    tile_list = dict()
+    quality_list = dict()
+
+    # Number of tiles in y direction
+    y_tiles = int(product.getSceneRasterHeight() / tilesize)
+    y_maxstart = product.getSceneRasterHeight() - tilesize - 1
+
+    # Number of tiles in x direction
+    x_tiles = int(product.getSceneRasterHeight() / tilesize)
+    x_maxstart = product.getSceneRasterHeight() - tilesize - 1
+
+    tile_quantity = int(x_tiles * y_tiles * tile_ratio)
+
+    for _ in range(tile_quantity):
+        TILE_XPOS = random.randint(0, x_maxstart)
+        TILE_YPOS = random.randint(0, y_maxstart)
+
+        TILECODE = f'{TILE_XPOS}x{TILE_YPOS}'
+        output_tif = f'tif{tilesize}/{file_index}_{TILECODE}.tif'
+
+        tile_inventory = tile_inventory.append({'pair_index': file_index,
+                                                'tile': TILECODE,
+                                                'size': tilesize,
+                                                'status': 'ok'}, ignore_index=True)
+        tile_index = tile_inventory.index[-1]
+
+        # if os.path.exists(os.path.join(PATH_DATA, output_filename)):
+        #     tif_inventory = tif_inventory.append({'img_pair_id': TILE_PREFIX,
+        #                             'tile': TILECODE,
+        #                             'size': TILESIZE,
+        #                             'tif_status': 'exists'}, ignore_index=True)
+        #     print(f'File {output_filename} already exists')
+        #     continue
+
+        try:
+            region = f'{TILE_XPOS},{TILE_YPOS},{tilesize},{tilesize}'
+            tile = region_subset(product, region)
+
+            if cloud_threshold < 1.0:
+                cloud_array = nparray(tile, 'B_opaque_clouds')
+                cloudpct = np.sum(cloud_array) / np.size(cloud_array)
+                tile_inventory.at[tile_index, 'clouds'] = f'{int(cloudpct * 100)}%'
+                if cloudpct > cloud_threshold:
+                    tile_inventory.at[tile_index, 'status'] = 'nok'
+
+            if len(ensure_intersect_with) > 0:
+                tile_polygon = get_bbox_polygon(tile)
+                intersections = []
+                for i in range(len(ensure_intersect_with)):
+                    intersect = tile_polygon.intersection(ensure_intersect_with[i]).area / tile_polygon.area
+                    if intersect < intersect_threshold:
+                        tile_inventory.at[tile_index, 'status'] = 'nok'
+                    intersections.append(f'[{i}]:{int(intersect * 100)}%')
+                tile_inventory.at[tile_index, 'intersect'] = '|'.join(intersections)
+                    
+            # black_array_s2 = nparray(tile, 'B2')
+            # blackpct_s2 = np.count_nonzero(black_array_s2 == -0.1) / np.size(black_array_s2)
+            # if blackpct_s2 > 0.05:
+            #     status = 'quality'
+            #     comment = f'S2 black: {int(blackpct_s2 * 100)}%'
+
+            black_array_s3 = nparray(tile, 'Oa17_radiance')
+            max_value = np.max(black_array_s3)
+            blackpct_s3 = np.count_nonzero(black_array_s3 == max_value) / np.size(black_array_s3)
+            if blackpct_s3 > 0.05:
+                tile_inventory.at[tile_index, 'status'] = 'nok'
+            tile_inventory.at[tile_index, 's3black'] = f'{int(blackpct_s3 * 100)}%'
+
+            if tile_inventory.at[tile_index, 'status'] == 'ok':
+                ProductIO.writeProduct(tile, os.path.join(output_path, output_tif), 'GeoTIFF')
+                tile_inventory.at[tile_index, 'filename'] = os.path.join(output_path, output_tif)
+            elif save_if_errors:
+                ProductIO.writeProduct(tile, os.path.join(output_path, output_tif + 'x'), 'GeoTIFF')
+                tile_inventory.at[tile_index, 'filename'] = os.path.join(output_path, output_tif + 'x.tif')
+                            
+            tile.dispose()
+            tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
+
+        except Exception as e:
+            tile_inventory.at[tile_index, 'status'] = 'error'
+            tile_inventory.at[tile_index, 'error'] = str(e)
+            tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
+            print(str(e))
+            continue
     
     tile_inventory.to_csv(os.path.join(output_path, f'inventory/tiles/{file_index}_{tilesize}.csv'), index=False)
 

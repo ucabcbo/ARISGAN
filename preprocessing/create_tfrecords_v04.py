@@ -31,14 +31,14 @@ for file in selected_files:
 
     raw_tiff = rasterio.open(os.path.join('/home/cb/sis2/data/curated/256/tif', file))
 
-    # subfolder = f'newalt6/{TILESIZE}/{suffix}/'
-    # if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
-    #     os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
-    # tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
-    # if os.path.exists(tensorpath):
-    #     print(f'Already exists: {tensorpath}')
-    # else:
-    #     tbx.save_tfrecord_alt(raw_tiff, tensorpath, downsample=6)
+    subfolder = f'newalt6/{TILESIZE}/{suffix}/'
+    if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
+        os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
+    tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
+    if os.path.exists(tensorpath):
+        print(f'Already exists: {tensorpath}')
+    else:
+        tbx.save_tfrecord_alt(raw_tiff, tensorpath, downsample=6)
 
     subfolder = f'newalt12/{TILESIZE}/{suffix}/'
     if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
@@ -49,20 +49,20 @@ for file in selected_files:
     else:
         tbx.save_tfrecord_alt(raw_tiff, tensorpath, downsample=12)
 
-    # subfolder = f'newalt30/{TILESIZE}/{suffix}/'
-    # if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
-    #     os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
-    # tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
-    # if os.path.exists(tensorpath):
-    #     print(f'Already exists: {tensorpath}')
-    # else:
-    #     tbx.save_tfrecord_alt(raw_tiff, tensorpath, downsample=30)
+    subfolder = f'newalt30/{TILESIZE}/{suffix}/'
+    if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
+        os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
+    tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
+    if os.path.exists(tensorpath):
+        print(f'Already exists: {tensorpath}')
+    else:
+        tbx.save_tfrecord_alt(raw_tiff, tensorpath, downsample=30)
 
-    # subfolder = f'newcurated/{TILESIZE}/{suffix}/'
-    # if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
-    #     os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
-    # tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
-    # if os.path.exists(tensorpath):
-    #     print(f'Already exists: {tensorpath}')
-    # else:
-    #     tbx.save_tfrecord(raw_tiff, tensorpath)
+    subfolder = f'newcurated/{TILESIZE}/{suffix}/'
+    if not os.path.exists(os.path.join(env.DATA_ROOT, subfolder)):
+        os.makedirs(os.path.join(env.DATA_ROOT, subfolder))
+    tensorpath = os.path.join(env.DATA_ROOT, subfolder, f'{filename}.tfrecord')
+    if os.path.exists(tensorpath):
+        print(f'Already exists: {tensorpath}')
+    else:
+        tbx.save_tfrecord(raw_tiff, tensorpath)
