@@ -108,11 +108,11 @@ for s2_index in s2_indices:
             if s2_intersect < 0.95:
                 continue
 
-            is_in_polygon = True
+            is_in_polygon = False
             for polygon in polygons:
                 mask_intersect = tile_polygon.intersection(polygon).area / tile_polygon.area
-                if mask_intersect < 0.8:
-                    is_in_polygon = False
+                if mask_intersect >= 0.8:
+                    is_in_polygon = True
 
             # stbx.plot_polygons(s2_raw, s3_raw, [tile], polygons, masks)
 
