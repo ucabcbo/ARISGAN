@@ -19,16 +19,19 @@ class Environment:
 
         assert environment is not None
 
-        self.SAMPLE_FREQ = environment['sample_freq']
-        self.CKPT_FREQ = environment['ckpt_freq']
+        self.SAMPLE_FREQ = environment.get('sample_freq', 1000)
+        self.CKPT_FREQ = environment.get('ckpt_freq', 5000)
 
-        self.MAX_SHUFFLE_BUFFER = environment['max_shuffle_buffer']
+        self.MAX_SHUFFLE_BUFFER = environment.get('max_shuffle_buffer', 500)
 
-        self.ENVIRONMENT = environment['environment']
+        self.ENVIRONMENT = environment.get('environment', None)
 
-        self.PROJECT_ROOT = environment['project_root']
-        self.DATA_ROOT = environment['data_root']
-        self.EXPERIMENT_ROOT = environment['experiment_root']
+        self.PROJECT_ROOT = environment.get('project_root', None)
+        self.DATA_ROOT = environment.get('data_root', None)
+        self.EXPERIMENT_ROOT = environment.get('experiment_root', None)
+
+        self.S2_ROOT = environment.get('s2_root', None)
+        self.S3_ROOT = environment.get('s3_root', None)
 
         sys.path.append(self.PROJECT_ROOT)
 

@@ -1,6 +1,6 @@
 {
     "model_name": "sis2",
-    "dataset": "curated",
+    "dataset": "cur_masked",
     "tilesize": 256,
     "steps": 500,
     "sample_train": 50,
@@ -10,6 +10,7 @@
     "shuffle": false,
     "random_resize": 1.2,
     "random_rotate": true,
+    "exclude_suffix": "notinmask",
 
     "params": {
     },
@@ -17,8 +18,8 @@
     "gen_loss": {
         "gen_gan": null,
         "gen_nll": null,
-        "gen_ssim": null,
-        "gen_l1": 100,
+        "gen_ssim": 50,
+        "gen_l1": 50,
         "gen_l2": null,
         "gen_rmse": null,
         "gen_wstein": 100

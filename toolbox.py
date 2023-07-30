@@ -162,36 +162,36 @@ def save_tfrecord(raw_tiff, filepath):
     writer.close()
 
 
-def save_tfrecord_alt(raw_tiff, filepath, downsample:int=6):
+def save_tfrecord_alt(raw_tiff, filepath, downsample:int):
     import numpy as np
     import tensorflow as tf
     from skimage.measure import block_reduce
+    from skimage.transform import resize
+    import rasterio
+    from rasterio.enums import Resampling
 
-    raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
     #TODO: adjust if tiff structure changes
-    raw_s2 = raw_np[:,:,2:5]
+    raw_s2 = np.transpose(raw_tiff.read(), (1, 2, 0))[:,:,2:5]
+    tilesize = raw_s2.shape[1]
 
-    #ChatGPT MEAN downsampling:
-    # blocks = raw_s2.reshape(raw_s2.shape[0] // downsample, downsample,
-    #                         raw_s2.shape[1] // downsample, downsample)
-    # average_blocks = blocks.mean(axis=(1, 3))
+    data = raw_tiff.read(
+        out_shape=(
+            raw_tiff.count,
+            int(raw_tiff.height / downsample),
+            int(raw_tiff.width / downsample)
+        ),
+        resampling=Resampling.average
+    )
+    #TODO: adjust if tiff structure changes
+    raw_np = np.transpose(data, (1, 2, 0))[:,:,2:5]
 
-    # downsampled_array = block_reduce(raw_s2, downsample, np.mean)
-    c1 = block_reduce(raw_s2[:,:,0], downsample, np.mean)
-    c2 = block_reduce(raw_s2[:,:,1], downsample, np.mean)
-    c3 = block_reduce(raw_s2[:,:,2], downsample, np.mean)
-    downsampled_array = np.stack([c1, c2, c3], axis=2)
-
-    # array_85x85 = raw_s2[::downsample, ::downsample]
-    array_85x85 = downsampled_array
-    expanded_array = np.kron(array_85x85, np.ones((downsample, downsample, 1)))
-    cropped_array = expanded_array[:256, :256, :]
+    output_array = resize(raw_np, (tilesize, tilesize), order=0, anti_aliasing=False)
 
     writer = tf.io.TFRecordWriter(filepath)
 
     sample = tf.train.Example(features=tf.train.Features(feature={
         'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
-        'raw_s2_alt': tf.train.Feature(float_list=tf.train.FloatList(value=cropped_array.flatten())),
+        'raw_s2_alt': tf.train.Feature(float_list=tf.train.FloatList(value=output_array.flatten())),
     }))
 
     writer.write(sample.SerializeToString())

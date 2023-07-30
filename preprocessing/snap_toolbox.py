@@ -1,15 +1,18 @@
-
 import os
+import sys
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
 import random
-from shapely.geometry import Polygon
+from shapely.geometry import Point, Polygon
+import geopandas as gpd
+from typing import Tuple
 
+sys.path.append(os.path.expanduser('~/.snap/snap-python'))
 import snappy
-from snappy import ProductIO, PixelPos
 from snappy import jpy
+from snappy import ProductIO, PixelPos
 HashMap = snappy.jpy.get_type('java.util.HashMap')
 
 import sys
@@ -17,15 +20,47 @@ sys.path.append('../')
 import toolbox as tbx
 
 
-def band_subset(raw, bands):
+def read_product(path: str):
+    """Read a Sentinel Product (tested with .SAFE and .SEN3 files.
+    Files must be unpacked (no zip files).
+
+    Args:
+        path (str): path+filename of source product
+
+    Returns:
+        org.esa.snap.core.datamodel.Product: ESA SNAP Product
+    """    
+    product = ProductIO.readProduct(path)
+    return product
+
+
+def band_subset(product, bands:str):
+    """Returns a new product, reduced to the specified bands of the input product
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        bands (str): Comma-separated list of bands to select
+
+    Returns:
+        org.esa.snap.core.datamodel.Product: Reduced product
+    """
     parameters = HashMap()
     parameters.put('sourceBands',bands)
-    result = snappy.GPF.createProduct('BandSelect', parameters, raw)
+    result = snappy.GPF.createProduct('BandSelect', parameters, product)
     # print(f'Subset created with {len(list(result.getBandNames()))} bands')
     return result
 
 
-def region_subset(raw, region):
+def region_subset(product, region:str):
+    """Creates a new product by pixel-based selecting the specified region of the input product
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        region (str): Region to select in the format: start_xpos,start_ypos,width,height
+
+    Returns:
+        org.esa.snap.core.datamodel.Product: Cut product
+    """
     parameters = HashMap()
     parameters.put('referenceBand','B2')
     parameters.put('region',region)
@@ -33,24 +68,45 @@ def region_subset(raw, region):
     parameters.put('subSamplingY','1')
     parameters.put('fullSwath','false')
     parameters.put('copyMetadata','true')
-    result = snappy.GPF.createProduct('Subset', parameters, raw)
+    result = snappy.GPF.createProduct('Subset', parameters, product)
     # print(f'Subset created, result has {len(list(result.getBandNames()))} bands')
     return result
 
 
-def resample(raw, reference_band, upsamling_method='Nearest'):
+def resample(product, reference_band:str, upsamling_method:str='Nearest'):
+    """Resamples all bands of a product to match the specified reference band, creates a new product.
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        reference_band (str): Name of the reference band
+        upsamling_method (str, optional): Upsampling method as specified by SNAP. Defaults to 'Nearest'.
+
+    Returns:
+        org.esa.snap.core.datamodel.Product: Resulting product
+    """
     parameters = HashMap()
     parameters.put('referenceBand',reference_band)
     parameters.put('upsampling',upsamling_method)
     parameters.put('downsampling','First')
     parameters.put('flagDownsampling','First')
     parameters.put('resampleOnPyramidLevels','true')
-    result = snappy.GPF.createProduct('Resample', parameters, raw)
+    result = snappy.GPF.createProduct('Resample', parameters, product)
     # print(f'Resampled, result has {len(list(result.getBandNames()))} bands')
     return result
 
 
-def collocate(master, slave, resampling_method='NEAREST_NEIGHBOUR', rename=False):
+def collocate(master, slave, resampling_method:str='NEAREST_NEIGHBOUR', rename:bool=False):
+    """Collocates the master and slave products
+
+    Args:
+        master (org.esa.snap.core.datamodel.Product): Master product
+        slave (org.esa.snap.core.datamodel.Product): Slave product
+        resampling_method (str, optional): Resampling method as specified by SNAP. Defaults to 'NEAREST_NEIGHBOUR'.
+        rename (bool, optional): Add M(aster)/S(lave) suffix to the resulting bands. Defaults to False.
+
+    Returns:
+        org.esa.snap.core.datamodel.Product: Collocated product
+    """
     parameters = HashMap()
     parameters.put('masterProductName',master.getName())
     # parameters.put('targetProductName','_collocated')
@@ -69,7 +125,16 @@ def collocate(master, slave, resampling_method='NEAREST_NEIGHBOUR', rename=False
     return result
 
 
-def nparray(product, bandname):
+def nparray(product, bandname:str) -> np.ndarray:
+    """Converts a single band of a ESA SNAP Product to a numpy array.
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        bandname (str): Name of the band
+
+    Returns:
+        numpy.ndarray: Respective band as numpy array
+    """
     band = product.getBand(bandname)
     width = band.getRasterWidth()
     height = band.getRasterHeight()
@@ -79,8 +144,41 @@ def nparray(product, bandname):
     return nparray
 
 
-def plot_tile(product, satellite, cloudmask=False, figsize=(10,10)):
-    # Extract the bands for red, green, and blue
+def load_kml(kmlfile:str) -> Polygon:
+    """Reads a KML file and converts it into a shapely Polygon - only tested with single-Polygon KML files
+
+    Args:
+        kmlfile (str): path+filename of the KML file
+
+    Returns:
+        Polygon: Resulting Polygon
+    """
+    gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
+    gdf = gpd.read_file(kmlfile, driver='KML')
+
+    points = []
+    # Access individual coordinates - required to align lat/long with SNAP products
+    for _, row in gdf.iterrows():
+        polygon = row['geometry']
+        points = [Point(point[1], point[0]) for point in polygon.exterior.coords]
+
+    return Polygon(points)
+
+
+def plot_tile(product, satellite:str, cloudmask:bool=False, figsize:Tuple[int,int]=(10,10), savefig:str='', show:bool=True, downsample:int=0, title:str='', subtitle:str=''):
+    """Plot an ESA SNAP Product for either display or save to png
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Product to plot
+        satellite (str): Satellite, only `s2` and `s3` are implemented and supported
+        cloudmask (bool, optional): If a cloud mask overlay should be displayed. Requires the Product contains band `B_opaque_clouds`. Defaults to False.
+        figsize (Tuple[int,int], optional): Figure size. Defaults to (10,10).
+        savefig (str, optional): Path+filename to save the png under. Defaults to '', in which case file is not saved.
+        show (bool, optional): Whether the plot shall be displayed on-screen. Defaults to True.
+        downsample (int, optional): Whether the pixel size shall be reduzed. Defaults to 0, equalling original size.
+        title (str, optional): Title of the plot. Defaults to ''.
+        subtitle (str, optional): Subtitle of the plot. Defaults to ''.
+    """
 
     if satellite == 's2':
         red_data = tbx.normalize_numpy(nparray(product, 'B4'))
@@ -92,9 +190,19 @@ def plot_tile(product, satellite, cloudmask=False, figsize=(10,10)):
         blue_data = tbx.normalize_numpy(nparray(product, 'Oa03_radiance'))
 
     stacked_array = np.stack([red_data, green_data, blue_data], axis=2)
+    
+    if not downsample == 0:
+        stacked_array = stacked_array[::downsample, ::downsample]
 
     plt.figure(figsize=figsize)
     plt.imshow(stacked_array)
+    plt.axis('off')
+    
+    if not title == '':
+        plt.title(title, fontsize=18)
+    
+    if not subtitle == '':
+        plt.text(0.5, 0.95, subtitle, fontsize=12, ha='center', va='center', transform=plt.gca().transAxes, color='white')
 
     if cloudmask:
         try:
@@ -103,12 +211,16 @@ def plot_tile(product, satellite, cloudmask=False, figsize=(10,10)):
         except:
             print('cloud band B_opaque_clouds not found')
 
-    # fig.axes.get_xaxis().set_visible(False)
-    # fig.axes.get_yaxis().set_visible(False)
-    plt.show()
+    if not savefig == '':
+        plt.savefig(savefig, bbox_inches='tight')
+
+    if show:
+        plt.show()
 
 
-def cut_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, ensure_intersect_with=[], intersect_threshold=0.95, cloud_threshold=1.0):
+def cut_tiles(product, tilesize:int, file_index:int, output_path:str, save_if_errors:bool, ensure_intersect_with=[], intersect_threshold:float=0.95, cloud_threshold:float=1.0):
+    """DEPRECATED: cuts a product into equally spaced tiles.
+    """
     tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'clouds', 'intersect', 's3black', 'error', 'filename'])
 
     file_index = f'{file_index:05d}'
@@ -207,7 +319,9 @@ def cut_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, e
     return tile_list, quality_list
 
 
-def cut_random_tiles(product, tilesize, file_index, output_path, save_if_errors:bool, ensure_intersect_with=[], intersect_threshold=0.95, cloud_threshold=1.0, tile_ratio=0.75):
+def cut_random_tiles(product, tilesize:int, file_index:int, output_path:str, save_if_errors:bool, ensure_intersect_with=[], intersect_threshold:float=0.95, cloud_threshold:float=1.0, tile_ratio:float=0.75):
+    """DEPRECATED: randomly cuts a product into tiles
+    """
     tile_inventory = pd.DataFrame(columns=['pair_index', 'tile', 'size', 'status', 'clouds', 'intersect', 's3black', 'error', 'filename'])
 
     file_index = f'{file_index:05d}'
@@ -302,7 +416,15 @@ def cut_random_tiles(product, tilesize, file_index, output_path, save_if_errors:
     return tile_list, quality_list
 
 
-def s2_metadata_cloud_percentage(s2_product):
+def s2_metadata_cloud_percentage(s2_product) -> float:
+    """Reads the cloud percentage from a Sentinel-2 product's metadata
+
+    Args:
+        s2_product (org.esa.snap.core.datamodel.Product): Input product
+
+    Returns:
+        float: Cloud percentage
+    """
     metadata = s2_product.getMetadataRoot()
     cloud_pct = float(metadata.getElement('Granules')
                       .getElementAt(0)
@@ -313,7 +435,18 @@ def s2_metadata_cloud_percentage(s2_product):
     return cloud_pct
 
 
-def check_overlap(master_product, slave_product, type_master='bbox', type_slave='bbox'):
+def check_overlap(master_product, slave_product, type_master:str='bbox', type_slave:str='bbox') -> float:
+    """Calculates the overlap between two ESA SNAP Products as a fraction of the master product
+
+    Args:
+        master_product (org.esa.snap.core.datamodel.Product): Master product
+        slave_product (org.esa.snap.core.datamodel.Product): Slave product
+        type_master (str, optional): Area to consider: metadata or `bbox`. In case of metadata, requires specification `metadata.s2` or `metadata.s3`. Defaults to 'bbox'.
+        type_slave (str, optional): Area to consider: metadata or `bbox`. In case of metadata, requires specification `metadata.s2` or `metadata.s3`. Defaults to 'bbox'.
+
+    Returns:
+        float: Overlap percentage
+    """
     
     if type_master[:8] == 'metadata':
         master_polygon = get_metadata_polygon(master_product, type_master[-2:])
@@ -331,7 +464,15 @@ def check_overlap(master_product, slave_product, type_master='bbox', type_slave=
     return intersect
 
 
-def get_bbox_polygon(product):
+def get_bbox_polygon(product) -> Polygon:
+    """Generates a shapely Polygon based on the product bounding box
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+
+    Returns:
+        Polygon: Resulting polygon
+    """
     
     # Initialize geocoding
     gc_a = product.getSceneGeoCoding()
@@ -352,7 +493,16 @@ def get_bbox_polygon(product):
     return polygon
 
 
-def get_metadata_polygon(product, satellite:str):
+def get_metadata_polygon(product, satellite:str) -> Polygon:
+    """Creates a shapely Polygon based on the satellite metadata information
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        satellite (str): Specification of satellite, currently only `s2` and `s3` supported
+
+    Returns:
+        Polygon: Resulting polygon
+    """
     metadata = product.getMetadataRoot()
 
     coordinates_list = None
@@ -382,21 +532,30 @@ def get_metadata_polygon(product, satellite:str):
     return Polygon(coordinates)
 
 
-def plot_polygons(s2_raw, s3_raw, tiles=None, figsize=(10,10)):
-    print(type(tiles))
-    s2_bbox = get_bbox_polygon(s2_raw)
-    s3_bbox = get_bbox_polygon(s3_raw)
-    s2_metadata = get_metadata_polygon(s2_raw, 's2')
-    s3_metadata = get_metadata_polygon(s3_raw, 's3')
+def plot_polygons(s2_product, s3_product, tiles=[], polygons=[], polygon_labels=[], figsize:Tuple[int,int]=(10,10), title:str='', savefig:str='', show:bool=True):
+    """Create a plot of Polygons and save them to file, and/or display on-screen. Currently one S2 and one S3 are required, along with potentially further products and shapely polygons.
+
+    Args:
+        s2_product (org.esa.snap.core.datamodel.Product): S2 Product
+        s3_product (org.esa.snap.core.datamodel.Product): S3 Product
+        tiles (list, optional): List of additional ESA SNAP Products to plot. Defaults to [].
+        polygons (list, optional): List of additional shapely Polygons to plot. Defaults to [].
+        polygon_labels (list, optional): Labels for the list of additional polygons. Defaults to [].
+        figsize (Tuple[int,int], optional): Figure size. Defaults to (10,10).
+        title (str, optional): Plot title. Defaults to ''.
+        savefig (str, optional): Path+filename of resulting png file. Defaults to '', in which case image is not saved.
+        show (bool, optional): Whether the plot shall be displayed on-screen. Defaults to True.
+    """
+    s2_bbox = get_bbox_polygon(s2_product)
+    s3_bbox = get_bbox_polygon(s3_product)
+    s2_metadata = get_metadata_polygon(s2_product, 's2')
+    s3_metadata = get_metadata_polygon(s3_product, 's3')
 
     tile_polygons = []
-    if type(tiles) is list:
-        for tile in tiles:
-            tile_polygons.append(get_bbox_polygon(tile))
-    else:
-        tile_polygons.append(get_bbox_polygon(tiles))
+    for tile in tiles:
+        tile_polygons.append(get_bbox_polygon(tile))
 
-    fig, ax = plt.subplots(figsize=figsize)
+    _, ax = plt.subplots(figsize=figsize)
 
     # Plot the polygons
     ax.plot(*s2_bbox.exterior.xy, color='palegreen', linestyle='dashed', linewidth=1, label='S2 bbox')
@@ -405,6 +564,9 @@ def plot_polygons(s2_raw, s3_raw, tiles=None, figsize=(10,10)):
     ax.plot(*s3_metadata.exterior.xy, color='blue', label='S3 actual')
     for index in range(len(tile_polygons)):
         ax.plot(*tile_polygons[index].exterior.xy, color='red', linewidth=1, label=f'Tile {index}')
+    for index in range(len(polygons)):
+        label = polygon_labels[index] if len(polygon_labels) > index else f'Polygon {index}'
+        ax.plot(*polygons[index].exterior.xy, color='gray', linewidth=1, label=label)
 
     # Set plot limits
     # ax.set_xlim(45, 90)
@@ -413,4 +575,22 @@ def plot_polygons(s2_raw, s3_raw, tiles=None, figsize=(10,10)):
     # ax.set_ylim(-82, -72)
 
     ax.legend()
-    plt.show()
+    if not title == '':
+        plt.title(title)
+    
+    if not savefig == '':
+        plt.savefig(savefig, bbox_inches='tight')
+
+    if show:
+        plt.show()
+
+
+def save_geotiff(product, path:str):
+    """Save product as GeoTIFF file
+
+    Args:
+        product (org.esa.snap.core.datamodel.Product): Input product
+        path (str): Path+filename to save as
+    """
+    ProductIO.writeProduct(product, path, 'GeoTIFF')
+

@@ -9,14 +9,18 @@ import toolbox as tbx
 class Reader():
 
     def __init__(self, experiment:Experiment, caller:str):
+        print(f'datamodel.Reader called by {caller}')
 
         self.exp:Experiment = experiment
         
         self.TRAIN_DIR = os.path.join(self.exp.DATA_ROOT, 'train/')
         self.VAL_DIR = os.path.join(self.exp.DATA_ROOT, 'val/')
 
-        train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if file.endswith('.tfrecord')]
-        print(f'datamodel.Reader called by {caller}')
+        if self.exp.EXCLUDE_SUFFIX is not None:
+            train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if (file.endswith('.tfrecord') and not file.endswith(f'{self.exp.EXCLUDE_SUFFIX}.tfrecord'))]
+        else:
+            train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if file.endswith('.tfrecord')]
+        print(f'full train dataset: {len(train_file_list)}')
         if self.exp.DATA_SAMPLE is not None and self.exp.DATA_SAMPLE[0] < len(train_file_list):
             import random
             train_file_list = random.sample(train_file_list, self.exp.DATA_SAMPLE[0])
@@ -25,7 +29,6 @@ class Reader():
 
         self.BUFFER_SIZE = len(train_file_list)
 
-        # train_dataset = tf.data.Dataset.list_files(str(f'{PATH_TRAIN}/*.tfrecords'))
         train_dataset = train_dataset.map(self.load_image_train,
                                         num_parallel_calls=tf.data.AUTOTUNE)
         if self.exp.SHUFFLE:
@@ -33,16 +36,16 @@ class Reader():
         train_dataset = train_dataset.batch(self.exp.BATCH_SIZE)
         self.train_dataset = train_dataset
 
-        test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if file.endswith('.tfrecord')]
+        if self.exp.EXCLUDE_SUFFIX is not None:
+            test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if (file.endswith('.tfrecord') and not file.endswith(f'{self.exp.EXCLUDE_SUFFIX}.tfrecord'))]
+        else:
+            test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if file.endswith('.tfrecord')]
+        print(f'full test dataset: {len(test_file_list)}')
         if self.exp.DATA_SAMPLE is not None and self.exp.DATA_SAMPLE[1] < len(test_file_list):
             import random
             test_file_list = random.sample(test_file_list, self.exp.DATA_SAMPLE[1])
             print(f'selected random sample val: {len(test_file_list)}')
         test_dataset = tf.data.TFRecordDataset(test_file_list)
-        # try:
-        #     test_dataset = tf.data.TFRecordDataset(test_file_list)
-        # except tf.errors.InvalidArgumentError:
-        #     test_dataset = tf.data.TFRecordDataset(train_file_list)
         test_dataset = test_dataset.map(self.load_image_test)
         test_dataset = test_dataset.batch(self.exp.BATCH_SIZE)
         self.test_dataset = test_dataset

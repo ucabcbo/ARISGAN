@@ -58,6 +58,7 @@ class Experiment:
         self.BATCH_SIZE:int = experiment.get('batch_size', 16)
         self.SHUFFLE:bool = experiment.get('shuffle', True)
         self.STEPS:int = experiment.get('steps', 40000)
+        self.EXCLUDE_SUFFIX:str = experiment.get('exclude_suffix', None)
 
         if self.DATASET[:3] == 'alt':
             self.PARSEMODE = 'alt'
