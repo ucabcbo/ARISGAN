@@ -583,6 +583,9 @@ def plot_polygons(s2_product, s3_product, tiles=[], polygons=[], polygon_labels=
 
     if show:
         plt.show()
+    else:
+        plt.close()
+        
 
 
 def save_geotiff(product, path:str):

@@ -68,7 +68,8 @@ for s2_index in s2_indices:
                     polygons=polygons,
                     polygon_labels=masks,
                     title=f'{invname}: {inv_index}\n{s2_filename}\n{s3_filename}',
-                    savefig=os.path.join(targetdir_png, f'{inv_index}.png'))
+                    savefig=os.path.join(targetdir_png, f'{inv_index}.png'),
+                    show=False)
 
     s2_subset = stbx.band_subset(s2_raw, 'B2,B3,B4')
     s3_subset = stbx.band_subset(s3_raw, 'Oa01_radiance,Oa02_radiance,Oa03_radiance,Oa04_radiance,Oa05_radiance,Oa06_radiance,Oa07_radiance,Oa08_radiance,Oa09_radiance,Oa10_radiance,Oa11_radiance,Oa12_radiance,Oa13_radiance,Oa14_radiance,Oa15_radiance,Oa16_radiance,Oa17_radiance,Oa18_radiance,Oa19_radiance,Oa20_radiance,Oa21_radiance')
@@ -123,3 +124,10 @@ for s2_index in s2_indices:
 
         except Exception as e:
             print(f'Error creating tile {tilecode}: {e}')
+    
+    s2_raw.dispose()
+    s3_raw.dispose()
+    s2_subset.dispose()
+    s3_subset.dispose()
+    collocated.dispose()
+    
