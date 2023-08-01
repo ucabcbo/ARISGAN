@@ -4,7 +4,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--inventory", required=True, help='Inventory code (folder name within _tif directory)')
 parser.add_argument("--dataset", required=True, help='Dataset Suffix in Output directory')
-parser.add_argument("--train_ratio", required=False, default=0.9, type=float, help='Ratio of training vs. test files')
+parser.add_argument("--train_ratio", required=False, default=0.95, type=float, help='Ratio of training vs. test files')
 parser.add_argument("--tilesize", required=False, default=256, type=int, help='Tilesize')
 
 a = parser.parse_args()
