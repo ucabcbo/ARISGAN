@@ -5,10 +5,10 @@ import sys
 class Experiment:
 
     class Output:
-        def __init__(self, output_root, fullname, timestamp):
+        def __init__(self, output_root:str, fullname:str, timestamp:str):
             self.LOGS = os.path.join(output_root, f'logs/{fullname}_{timestamp}/')
             self.CKPT = os.path.join(output_root, f'ckpt/{timestamp}')
-            #TODO: should I delete all samples first?
+            #TODO: should I delete all old samples first?
             self.SAMPLES = os.path.join(output_root, f'samples/')
             self.MODEL = os.path.join(output_root, f'model/')
             os.makedirs(self.LOGS, exist_ok=True)
@@ -17,7 +17,16 @@ class Experiment:
             os.makedirs(self.MODEL, exist_ok=True)
 
 
-    def __init__(self, path, experiment_name, timestamp):
+    def __init__(self, path:str, experiment_name:str, timestamp:str, restore:bool=False):
+        """Creates a new Experiment instance by reading the respective experiment.json,
+        exposing its parameters, and preparing output directory structure.
+
+        Args:
+            path (str): Path to experiment root directory (from environment.json)
+            experiment_name (str): Experiment name as sub-directories
+            timestamp (str): Timestamp, typically `MMDD-hhmm`
+            restore (bool, optional): Whether an existing experiment shall be restored. Defaults to False, which will create a new experiment.
+        """        
 
         self.STRINGNAME = experiment_name.replace('/', '_')
         self.TIMESTAMP = timestamp
@@ -38,6 +47,8 @@ class Experiment:
         self.SAMPLE_FREQ = environment.get('sample_freq', 1000)
         self.CKPT_FREQ = environment.get('ckpt_freq', 5000)
         self.MAX_SHUFFLE_BUFFER = environment.get('max_shuffle_buffer', 500)
+
+        self.RESTORE = restore
 
 
         with open(os.path.join(path, 'experiment.json')) as f:
@@ -93,7 +104,6 @@ class Experiment:
         self.GEN_LOSS = experiment.get('gen_loss', default_ganloss)
         self.DISC_LOSS = experiment.get('disc_loss', default_discloss)
         self.PARAMS = experiment.get('params', {})
-
 
         self.output = Experiment.Output(path, self.STRINGNAME, self.TIMESTAMP)
 

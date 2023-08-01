@@ -200,4 +200,30 @@ def fit(train_ds, test_ds, steps):
 
 fit(train_dataset, test_dataset, steps=(exp.STEPS - stepoffset))
 
-print('EXPERIMENT COMPLETED')
+print('TRAINING COMPLETED')
+
+import pandas as pd
+from models import metrics
+
+def evaluate(test_ds:tf.data.Dataset) -> pd.DataFrame:
+
+    metric_results = pd.DataFrame()
+
+    for step, (target, input_image) in test_ds.enumerate():
+        # print(input_image.shape)
+        prediction = generator(input_image, training=False)
+
+        for (single_target, single_prediction) in zip(target, prediction):
+
+            metric = metrics.Metrics(single_target.numpy(), single_prediction.numpy())
+            df = pd.DataFrame([metric.getall()])
+            metric_results = pd.concat([metric_results, df], ignore_index=True)
+            # metric_results.append(metric.getall())
+    
+    return metric_results
+
+
+eval_results = evaluate(test_dataset)
+eval_results.to_csv(os.path.join(exp.EXPERIMENT_ROOT, f'{a.exp.replace("/", "_")}_{a.timestamp}.csv'), index_label='index')
+
+print('EVALUATION COMPLETED')
