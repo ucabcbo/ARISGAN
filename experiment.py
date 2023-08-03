@@ -70,6 +70,7 @@ class Experiment:
         self.SHUFFLE:bool = experiment.get('shuffle', True)
         self.STEPS:int = experiment.get('steps', 40000)
         self.EXCLUDE_SUFFIX:str = experiment.get('exclude_suffix', None)
+        self.ENFORCE_SUFFIX:str = experiment.get('enforce_suffix', None)
 
         if self.DATASET[:3] == 'alt':
             self.PARSEMODE = 'alt'

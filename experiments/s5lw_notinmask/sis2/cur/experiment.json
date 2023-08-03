@@ -1,6 +1,6 @@
 {
     "model_name": "sis2",
-    "dataset": "alt12_masked",
+    "dataset": "cur_masked",
     "tilesize": 256,
     "batch_size": 8,
     "shuffle": true,

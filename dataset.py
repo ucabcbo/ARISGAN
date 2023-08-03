@@ -16,11 +16,25 @@ class Reader():
         self.TRAIN_DIR = os.path.join(self.exp.DATA_ROOT, 'train/')
         self.VAL_DIR = os.path.join(self.exp.DATA_ROOT, 'val/')
 
-        if self.exp.EXCLUDE_SUFFIX is not None:
-            train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if (file.endswith('.tfrecord') and not file.endswith(f'{self.exp.EXCLUDE_SUFFIX}.tfrecord'))]
-        else:
-            train_file_list = [os.path.join(self.TRAIN_DIR, file) for file in os.listdir(self.TRAIN_DIR) if file.endswith('.tfrecord')]
+
+        train_file_list = [
+            os.path.join(self.TRAIN_DIR, file) 
+            for file in os.listdir(self.TRAIN_DIR) 
+            if file.endswith('.tfrecord')
+            and (self.exp.EXCLUDE_SUFFIX is None or self.exp.EXCLUDE_SUFFIX not in file)
+            and (self.exp.ENFORCE_SUFFIX is None or self.exp.ENFORCE_SUFFIX in file)
+        ]
         print(f'full train dataset: {len(train_file_list)}')
+
+        test_file_list = [
+            os.path.join(self.VAL_DIR, file) 
+            for file in os.listdir(self.VAL_DIR) 
+            if file.endswith('.tfrecord')
+            and (self.exp.EXCLUDE_SUFFIX is None or self.exp.EXCLUDE_SUFFIX not in file)
+            and (self.exp.ENFORCE_SUFFIX is None or self.exp.ENFORCE_SUFFIX in file)
+        ]
+        print(f'full test dataset: {len(test_file_list)}')
+
         if self.exp.DATA_SAMPLE is not None and self.exp.DATA_SAMPLE[0] < len(train_file_list):
             import random
             train_file_list = random.sample(train_file_list, self.exp.DATA_SAMPLE[0])
@@ -36,11 +50,7 @@ class Reader():
         train_dataset = train_dataset.batch(self.exp.BATCH_SIZE)
         self.train_dataset = train_dataset
 
-        if self.exp.EXCLUDE_SUFFIX is not None:
-            test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if (file.endswith('.tfrecord') and not file.endswith(f'{self.exp.EXCLUDE_SUFFIX}.tfrecord'))]
-        else:
-            test_file_list = [os.path.join(self.VAL_DIR, file) for file in os.listdir(self.VAL_DIR) if file.endswith('.tfrecord')]
-        print(f'full test dataset: {len(test_file_list)}')
+
         if self.exp.DATA_SAMPLE is not None and self.exp.DATA_SAMPLE[1] < len(test_file_list):
             import random
             test_file_list = random.sample(test_file_list, self.exp.DATA_SAMPLE[1])
