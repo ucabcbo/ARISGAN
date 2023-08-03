@@ -36,9 +36,10 @@ outputdir_cur = os.path.join(env.DATA_ROOT, f'cur_{DATASET}', str(TILESIZE))
 outputdir_alt3 = os.path.join(env.DATA_ROOT, f'alt3_{DATASET}', str(TILESIZE))
 outputdir_alt6 = os.path.join(env.DATA_ROOT, f'alt6_{DATASET}', str(TILESIZE))
 outputdir_alt12 = os.path.join(env.DATA_ROOT, f'alt12_{DATASET}', str(TILESIZE))
+outputdir_alt20 = os.path.join(env.DATA_ROOT, f'alt20_{DATASET}', str(TILESIZE))
 outputdir_alt30 = os.path.join(env.DATA_ROOT, f'alt30_{DATASET}', str(TILESIZE))
 
-outputdirs = [outputdir_cur, outputdir_alt3, outputdir_alt6, outputdir_alt12, outputdir_alt30]
+outputdirs = [outputdir_cur, outputdir_alt3, outputdir_alt6, outputdir_alt12, outputdir_alt20, outputdir_alt30]
 
 for outputdir in outputdirs:
     if not os.path.exists(os.path.join(outputdir, 'train')):
@@ -61,5 +62,8 @@ for file in files:
         tbx.save_tfrecord_alt(raw_tiff, os.path.join(outputdir_alt3, trainval, f'{filename}.tfrecord'), downsample=3)
         tbx.save_tfrecord_alt(raw_tiff, os.path.join(outputdir_alt6, trainval, f'{filename}.tfrecord'), downsample=6)
         tbx.save_tfrecord_alt(raw_tiff, os.path.join(outputdir_alt12, trainval, f'{filename}.tfrecord'), downsample=12)
+        tbx.save_tfrecord_alt(raw_tiff, os.path.join(outputdir_alt20, trainval, f'{filename}.tfrecord'), downsample=20)
         tbx.save_tfrecord_alt(raw_tiff, os.path.join(outputdir_alt30, trainval, f'{filename}.tfrecord'), downsample=30)
         print(f'Saved tfrecords for {filename}')
+
+tbx.send_email('50_create_tfrecords completed', f'Inventory: {INVENTORY}')

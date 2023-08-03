@@ -146,20 +146,24 @@ def save_tfrecord(raw_tiff, filepath):
     import numpy as np
     import tensorflow as tf
 
-    raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
-    #TODO: adjust if tiff structure changes
-    raw_s2 = raw_np[:,:,2:5]
-    raw_s3 = raw_np[:,:,5:26]
+    try:
+        raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
+        #TODO: adjust if tiff structure changes
+        raw_s2 = raw_np[:,:,2:5]
+        raw_s3 = raw_np[:,:,5:26]
 
-    writer = tf.io.TFRecordWriter(filepath)
+        writer = tf.io.TFRecordWriter(filepath)
 
-    sample = tf.train.Example(features=tf.train.Features(feature={
-        'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
-        'raw_s3': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s3.flatten())),
-    }))
+        sample = tf.train.Example(features=tf.train.Features(feature={
+            'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
+            'raw_s3': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s3.flatten())),
+        }))
 
-    writer.write(sample.SerializeToString())
-    writer.close()
+        writer.write(sample.SerializeToString())
+        writer.close()
+
+    except Exception as e:
+        print(f'Unexpected Exception in toolbox.save_tfrecord: {e}')
 
 
 def save_tfrecord_alt(raw_tiff, filepath, downsample:int):
@@ -170,32 +174,35 @@ def save_tfrecord_alt(raw_tiff, filepath, downsample:int):
     import rasterio
     from rasterio.enums import Resampling
 
-    #TODO: adjust if tiff structure changes
-    raw_s2 = np.transpose(raw_tiff.read(), (1, 2, 0))[:,:,2:5]
-    tilesize = raw_s2.shape[1]
+    try:
+        #TODO: adjust if tiff structure changes
+        raw_s2 = np.transpose(raw_tiff.read(), (1, 2, 0))[:,:,2:5]
+        tilesize = raw_s2.shape[1]
 
-    data = raw_tiff.read(
-        out_shape=(
-            raw_tiff.count,
-            int(raw_tiff.height / downsample),
-            int(raw_tiff.width / downsample)
-        ),
-        resampling=Resampling.average
-    )
-    #TODO: adjust if tiff structure changes
-    raw_np = np.transpose(data, (1, 2, 0))[:,:,2:5]
+        data = raw_tiff.read(
+            out_shape=(
+                raw_tiff.count,
+                int(raw_tiff.height / downsample),
+                int(raw_tiff.width / downsample)
+            ),
+            resampling=Resampling.average
+        )
+        #TODO: adjust if tiff structure changes
+        raw_np = np.transpose(data, (1, 2, 0))[:,:,2:5]
 
-    output_array = resize(raw_np, (tilesize, tilesize), order=0, anti_aliasing=False)
+        output_array = resize(raw_np, (tilesize, tilesize), order=0, anti_aliasing=False)
 
-    writer = tf.io.TFRecordWriter(filepath)
+        writer = tf.io.TFRecordWriter(filepath)
 
-    sample = tf.train.Example(features=tf.train.Features(feature={
-        'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
-        'raw_s2_alt': tf.train.Feature(float_list=tf.train.FloatList(value=output_array.flatten())),
-    }))
+        sample = tf.train.Example(features=tf.train.Features(feature={
+            'raw_s2': tf.train.Feature(float_list=tf.train.FloatList(value=raw_s2.flatten())),
+            'raw_s2_alt': tf.train.Feature(float_list=tf.train.FloatList(value=output_array.flatten())),
+        }))
 
-    writer.write(sample.SerializeToString())
-    writer.close()
+        writer.write(sample.SerializeToString())
+        writer.close()
+    except Exception as e:
+        print(f'Unexpected Exception in toolbox.save_tfrecord_alt: {e}')
 
 
 def parse_tfrecord(tfrecord, tilesize):
@@ -298,4 +305,29 @@ def generate_images_alt(model, example_input, example_target, num_images=5, show
         plt.show()
     else:
         plt.close()
+
+
+def send_email(subject, body, sender_email:str='c49040@gmail.com', receiver_email:str='ucabcbo@ucl.ac.uk', password:str=None):
+    import os
+    import smtplib
+    from email.mime.text import MIMEText
+
+    message = MIMEText(body)
+    message['Subject'] = subject
+    message['From'] = sender_email
+    message['To'] = receiver_email
+
+    if password is None:
+        password = os.environ.get('EMAIL_PASSWORD')
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, password)
+        server.sendmail(sender_email, [receiver_email], message.as_string())
+        print('Email sent successfully!')
+    except Exception as e:
+        print(f'Error sending email: {e}')
+    finally:
+        server.quit()
 

@@ -224,6 +224,7 @@ def evaluate(test_ds:tf.data.Dataset) -> pd.DataFrame:
 
 
 eval_results = evaluate(test_dataset)
-eval_results.to_csv(os.path.join(exp.EXPERIMENT_ROOT, f'{a.exp.replace("/", "_")}_{a.timestamp}.csv'), index_label='index')
+os.makedirs(os.path.join(exp.EXPERIMENT_ROOT, '_evaluation'), exist_ok=True)
+eval_results.to_csv(os.path.join(exp.EXPERIMENT_ROOT, '_evaluation', f'{a.exp.replace("/", "_")}_{a.timestamp}.csv'), index_label='index')
 
 print('EVALUATION COMPLETED')
