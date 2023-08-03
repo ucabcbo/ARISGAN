@@ -1,11 +1,15 @@
-
-def normalize_numpy(array):
-    array_min, array_max = array.min(), array.max()
-    return (array - array_min) / (array_max - array_min)
-
+import numpy as np
 from enum import Enum
+from matplotlib import pyplot as plt
+import rasterio
+import tensorflow as tf
+from skimage.transform import resize
+from rasterio.enums import Resampling
 
 class RGBProfile(Enum):
+    """Class to define RGB profiles for the display of multi-channel tif images.\n
+    Specifies which channel is used for red, green, blue bands
+    """
     S2 = [3,2,1]
     S3 = [17,6,3]
     S3_TRISTIMULUS = [17,5,2]
@@ -13,29 +17,59 @@ class RGBProfile(Enum):
 tiff_bandoffset = {RGBProfile.S2.name: 2,
                    RGBProfile.S3.name: 5,
                    RGBProfile.S3_TRISTIMULUS.name: 5}
+"""Related to the SIS2 standard tif structure, what is the channel offset to display the correct bands.\n
+SIS2 TIFF channels:\n
+0-1: collocation and quality masks\n
+2-4: Sentinel-2 bands B2, B3, B4\n
+5-26: Sentinel-2 bands 01-21
+"""
 
 tensor_bandoffset = {RGBProfile.S2.name: -1,
                      RGBProfile.S3.name: -1,
                      RGBProfile.S3_TRISTIMULUS.name: -1}
+"""Related to the SIS2 standard tfrecord structure, what is the channel offset to display the correct bands.\n
+In the concrete case, Sentinel-2 and Sentinel-3 images are separated in tensors already, and each starts at band 0.
+"""
 
 
-def plot_tiff(raw_tiff, rgbprofile, ax=None):
+def normalize_numpy(array:np.ndarray):
+    """Normalize a numpy array
 
+    Parameters
+    ----------
+    array : numpy.ndarray
+        Array of floats
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of floats, normalized
+    """
+    array_min, array_max = array.min(), array.max()
+    return (array - array_min) / (array_max - array_min)
+
+
+def plot_tiff(raw_tiff:rasterio.io.DatasetReader, rgbprofile:RGBProfile, ax:plt.Axes=None):
+    """Plot an image from a tif file
+
+    Parameters
+    ----------
+    raw_tiff : rasterio.io.DatasetReader
+        Tif file, as read by `rasterio.open()`
+    rgbprofile : RGBProfile
+        RGB profile to use for selecting RGB bands for display
+    ax : plt.Axes, optional
+        Axis to plot the result on, by default None, which will create a standalone plot
+    """
     bands = rgbprofile.value
     bands = [item + tiff_bandoffset[rgbprofile.name] for item in bands]
-
-    import numpy as np
-    from matplotlib import pyplot as plt
 
     red_band = normalize_numpy(raw_tiff.read(bands[0]))
     green_band = normalize_numpy(raw_tiff.read(bands[1]))
     blue_band = normalize_numpy(raw_tiff.read(bands[2]))
 
-    # Stack the bands to create the RGB image
-    # rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
     rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
 
-    # Display the RGB image
     if ax is None:
         plt.figure(figsize=(10,10))
         plt.imshow(rgb_image)
@@ -46,14 +80,21 @@ def plot_tiff(raw_tiff, rgbprofile, ax=None):
         ax.axis('off')
 
 
-def plot_tiff_channel(raw_tiff, channel:int, ax=None):
+def plot_tiff_channel(raw_tiff:rasterio.io.DatasetReader, channel:int, ax:plt.Axes=None):
+    """Plot a single channel of a tif file
 
-    import numpy as np
-    from matplotlib import pyplot as plt
+    Parameters
+    ----------
+    raw_tiff : rasterio.io.DatasetReader
+        Tif file, as read by `rasterio.open()`
+    channel : int
+        Which channel to plot
+    ax : plt.Axes, optional
+        Axis to plot the result on, by default None, which will create a standalone plot
+    """
 
     channel = normalize_numpy(raw_tiff.read(channel))
 
-    # Display the RGB image
     if ax is None:
         plt.figure(figsize=(10,10))
         plt.imshow(channel, cmap='gray')
@@ -64,9 +105,20 @@ def plot_tiff_channel(raw_tiff, channel:int, ax=None):
         ax.axis('off')
 
 
+def plot_tiff_sbs(raw_tiff:rasterio.io.DatasetReader, left_rgbprofile:RGBProfile=RGBProfile.S2, right_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
+    """Convenience function: plot two images of the same tif side by side.
 
-def plot_tiff_sbs(raw_tiff, left_rgbprofile=RGBProfile.S2, right_rgbprofile=RGBProfile.S3, title=None):
-    from matplotlib import pyplot as plt
+    Parameters
+    ----------
+    raw_tiff : rasterio.io.DatasetReader
+        Tif file, as read by `rasterio.open()`
+    left_rgbprofile : RGBProfile, optional
+        RGB profile for the left image, by default RGBProfile.S2
+    right_rgbprofile : RGBProfile, optional
+        RGB profile for the right image, by default RGBProfile.S3
+    title : str, optional
+        Title, by default None
+    """
 
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     if title is not None:
@@ -78,16 +130,21 @@ def plot_tiff_sbs(raw_tiff, left_rgbprofile=RGBProfile.S2, right_rgbprofile=RGBP
     plt.tight_layout()
     plt.show()
 
-def plot_tensor(tensor, rgbprofile, ax=None):
 
-    # print(banddelta)
-    # print(type(rgbprofile))
-    # print(type(RGBProfile.S3))
+def plot_tensor(tensor:tf.Tensor, rgbprofile:RGBProfile, ax:plt.Axes=None):
+    """Plot an image of a tensor - tensor must be unpacked already
+
+    Parameters
+    ----------
+    tensor : tf.Tensor
+        Tensor to plot
+    rgbprofile : RGBProfile
+        Which RGB profile to use for the tensor plot
+    ax : plt.Axes, optional
+        Axis to plot the result on, by default None, which will create a standalone plot
+    """
     bands = rgbprofile.value
     bands = [item + tensor_bandoffset[rgbprofile.name] for item in bands]
-
-    import numpy as np
-    from matplotlib import pyplot as plt
 
     nptensor = tensor.numpy()
 
@@ -95,12 +152,9 @@ def plot_tensor(tensor, rgbprofile, ax=None):
     green_band = normalize_numpy(nptensor[:,:,bands[1]])
     blue_band = normalize_numpy(nptensor[:,:,bands[2]])
 
-    # Stack the bands to create the RGB image
-    # rgb_image = rasterio.plot.reshape_as_image([red_band, green_band, blue_band])
     rgb_image = np.stack([red_band, green_band, blue_band], axis=-1)
 
     if ax is None:
-        # Display the RGB image
         plt.figure(figsize=(10,10))
         plt.imshow(rgb_image)
         plt.axis('off')
@@ -110,8 +164,21 @@ def plot_tensor(tensor, rgbprofile, ax=None):
         ax.axis('off')
 
 
-def plot_tensor_sbs(tensor, tilesize, s3_rgbprofile=RGBProfile.S3, title=None):
-    from matplotlib import pyplot as plt
+def plot_tensor_sbs(tensor:tf.Tensor, tilesize:int, s3_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
+    """Convenience function: plot two images of one raw tensor side-by-side.\n
+    Only supports Sentinel-2/Sentinel-3 combination, use `plot_tensor_sbs_alt()` for Sentinel-2/Sentinel-2 combination.
+
+    Parameters
+    ----------
+    tensor : tf.Tensor
+        Tensor to plot (packed)
+    tilesize : int
+        Tilesize in the tensor (required for unpacking)
+    s3_rgbprofile : RGBProfile, optional
+        RGB profile for the right image, by default RGBProfile.S3
+    title : str, optional
+        Title, by default None
+    """
 
     s2_tensor, s3_tensor = parse_tfrecord(tensor, tilesize)
     
@@ -126,9 +193,19 @@ def plot_tensor_sbs(tensor, tilesize, s3_rgbprofile=RGBProfile.S3, title=None):
     plt.show()
 
 
-def plot_tensor_sbs_alt(tensor, tilesize, title=None):
-    from matplotlib import pyplot as plt
+def plot_tensor_sbs_alt(tensor:tf.Tensor, tilesize:int, title:str=None):
+    """Convenience function: plot two images of the same tensor side-by-side. 
+    Only supports Sentinel-2/Sentinel-2 combination, use `plot_tensor_sbs()` for Sentinel-2/Sentinel-3 combination.
 
+    Parameters
+    ----------
+    tensor : tf.Tensor
+        Tensor to plot (packed)
+    tilesize : int
+        Tilesize in the tensor (required for unpacking)
+    title : str, optional
+        Title, by default None
+    """
     s2_tensor, s3_tensor = parse_tfrecord_alt(tensor, tilesize)
     
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
@@ -142,10 +219,17 @@ def plot_tensor_sbs_alt(tensor, tilesize, title=None):
     plt.show()
 
 
-def save_tfrecord(raw_tiff, filepath):
-    import numpy as np
-    import tensorflow as tf
+def save_tfrecord(raw_tiff:rasterio.io.DatasetReader, filepath:str):
+    """Save tif file as tfrecord. Note that the tif structure is hardcoded and this function needs to be updated if it changes.
+    This function is for Sentinel-2/Sentinel-3 tifs with 26 channels. Use `save_tfrecord_alt()` for Sentinel-2/Sentinel-2 combination.
 
+    Parameters
+    ----------
+    raw_tiff : rasterio.io.DatasetReader
+        Tif file, as read by `rasterio.open()`
+    filepath : str
+        Path+filename to save the tfrecord as
+    """
     try:
         raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
         #TODO: adjust if tiff structure changes
@@ -166,14 +250,19 @@ def save_tfrecord(raw_tiff, filepath):
         print(f'Unexpected Exception in toolbox.save_tfrecord: {e}')
 
 
-def save_tfrecord_alt(raw_tiff, filepath, downsample:int):
-    import numpy as np
-    import tensorflow as tf
-    from skimage.measure import block_reduce
-    from skimage.transform import resize
-    import rasterio
-    from rasterio.enums import Resampling
+def save_tfrecord_alt(raw_tiff:rasterio.io.DatasetReader, filepath:str, downsample:int):
+    """Save tif file as tfrecord. Note that the tif structure is hardcoded and this function needs to be updated if it changes.
+    This function is for Sentinel-2/Sentinel-2 tifs with 26 channels. Use `save_tfrecord()` for Sentinel-2/Sentinel-3 combination.
 
+    Parameters
+    ----------
+    raw_tiff : rasterio.io.DatasetReader
+        Tif file, as read by `rasterio.open()`
+    filepath : str
+        Path+filename to save the tfrecord as
+    downsample : int
+        Factor by which to downsample the input image (function doesn't make sense without downsampling).
+    """
     try:
         #TODO: adjust if tiff structure changes
         raw_s2 = np.transpose(raw_tiff.read(), (1, 2, 0))[:,:,2:5]
