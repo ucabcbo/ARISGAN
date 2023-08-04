@@ -1,10 +1,7 @@
 import numpy as np
 from enum import Enum
 from matplotlib import pyplot as plt
-import rasterio
-import tensorflow as tf
-from skimage.transform import resize
-from rasterio.enums import Resampling
+
 
 class RGBProfile(Enum):
     """Class to define RGB profiles for the display of multi-channel tif images.\n
@@ -49,7 +46,7 @@ def normalize_numpy(array:np.ndarray):
     return (array - array_min) / (array_max - array_min)
 
 
-def plot_tiff(raw_tiff:rasterio.io.DatasetReader, rgbprofile:RGBProfile, ax:plt.Axes=None):
+def plot_tiff(raw_tiff, rgbprofile:RGBProfile, ax:plt.Axes=None):
     """Plot an image from a tif file
 
     Parameters
@@ -61,6 +58,7 @@ def plot_tiff(raw_tiff:rasterio.io.DatasetReader, rgbprofile:RGBProfile, ax:plt.
     ax : plt.Axes, optional
         Axis to plot the result on, by default None, which will create a standalone plot
     """
+    import rasterio
     bands = rgbprofile.value
     bands = [item + tiff_bandoffset[rgbprofile.name] for item in bands]
 
@@ -80,7 +78,7 @@ def plot_tiff(raw_tiff:rasterio.io.DatasetReader, rgbprofile:RGBProfile, ax:plt.
         ax.axis('off')
 
 
-def plot_tiff_channel(raw_tiff:rasterio.io.DatasetReader, channel:int, ax:plt.Axes=None):
+def plot_tiff_channel(raw_tiff, channel:int, ax:plt.Axes=None):
     """Plot a single channel of a tif file
 
     Parameters
@@ -92,7 +90,7 @@ def plot_tiff_channel(raw_tiff:rasterio.io.DatasetReader, channel:int, ax:plt.Ax
     ax : plt.Axes, optional
         Axis to plot the result on, by default None, which will create a standalone plot
     """
-
+    import rasterio
     channel = normalize_numpy(raw_tiff.read(channel))
 
     if ax is None:
@@ -105,7 +103,7 @@ def plot_tiff_channel(raw_tiff:rasterio.io.DatasetReader, channel:int, ax:plt.Ax
         ax.axis('off')
 
 
-def plot_tiff_sbs(raw_tiff:rasterio.io.DatasetReader, left_rgbprofile:RGBProfile=RGBProfile.S2, right_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
+def plot_tiff_sbs(raw_tiff, left_rgbprofile:RGBProfile=RGBProfile.S2, right_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
     """Convenience function: plot two images of the same tif side by side.
 
     Parameters
@@ -119,7 +117,7 @@ def plot_tiff_sbs(raw_tiff:rasterio.io.DatasetReader, left_rgbprofile:RGBProfile
     title : str, optional
         Title, by default None
     """
-
+    import rasterio
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
     if title is not None:
         fig.suptitle(title)
@@ -131,7 +129,7 @@ def plot_tiff_sbs(raw_tiff:rasterio.io.DatasetReader, left_rgbprofile:RGBProfile
     plt.show()
 
 
-def plot_tensor(tensor:tf.Tensor, rgbprofile:RGBProfile, ax:plt.Axes=None):
+def plot_tensor(tensor, rgbprofile:RGBProfile, ax:plt.Axes=None):
     """Plot an image of a tensor - tensor must be unpacked already
 
     Parameters
@@ -143,6 +141,7 @@ def plot_tensor(tensor:tf.Tensor, rgbprofile:RGBProfile, ax:plt.Axes=None):
     ax : plt.Axes, optional
         Axis to plot the result on, by default None, which will create a standalone plot
     """
+    import tensorflow as tf
     bands = rgbprofile.value
     bands = [item + tensor_bandoffset[rgbprofile.name] for item in bands]
 
@@ -164,7 +163,7 @@ def plot_tensor(tensor:tf.Tensor, rgbprofile:RGBProfile, ax:plt.Axes=None):
         ax.axis('off')
 
 
-def plot_tensor_sbs(tensor:tf.Tensor, tilesize:int, s3_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
+def plot_tensor_sbs(tensor, tilesize:int, s3_rgbprofile:RGBProfile=RGBProfile.S3, title:str=None):
     """Convenience function: plot two images of one raw tensor side-by-side.\n
     Only supports Sentinel-2/Sentinel-3 combination, use `plot_tensor_sbs_alt()` for Sentinel-2/Sentinel-2 combination.
 
@@ -179,7 +178,7 @@ def plot_tensor_sbs(tensor:tf.Tensor, tilesize:int, s3_rgbprofile:RGBProfile=RGB
     title : str, optional
         Title, by default None
     """
-
+    import tensorflow as tf
     s2_tensor, s3_tensor = parse_tfrecord(tensor, tilesize)
     
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
@@ -193,7 +192,7 @@ def plot_tensor_sbs(tensor:tf.Tensor, tilesize:int, s3_rgbprofile:RGBProfile=RGB
     plt.show()
 
 
-def plot_tensor_sbs_alt(tensor:tf.Tensor, tilesize:int, title:str=None):
+def plot_tensor_sbs_alt(tensor, tilesize:int, title:str=None):
     """Convenience function: plot two images of the same tensor side-by-side. 
     Only supports Sentinel-2/Sentinel-2 combination, use `plot_tensor_sbs()` for Sentinel-2/Sentinel-3 combination.
 
@@ -206,6 +205,7 @@ def plot_tensor_sbs_alt(tensor:tf.Tensor, tilesize:int, title:str=None):
     title : str, optional
         Title, by default None
     """
+    import tensorflow as tf
     s2_tensor, s3_tensor = parse_tfrecord_alt(tensor, tilesize)
     
     fig, ax = plt.subplots(1, 2, figsize=(10,5))
@@ -219,7 +219,7 @@ def plot_tensor_sbs_alt(tensor:tf.Tensor, tilesize:int, title:str=None):
     plt.show()
 
 
-def save_tfrecord(raw_tiff:rasterio.io.DatasetReader, filepath:str):
+def save_tfrecord(raw_tiff, filepath:str):
     """Save tif file as tfrecord. Note that the tif structure is hardcoded and this function needs to be updated if it changes.
     This function is for Sentinel-2/Sentinel-3 tifs with 26 channels. Use `save_tfrecord_alt()` for Sentinel-2/Sentinel-2 combination.
 
@@ -230,6 +230,7 @@ def save_tfrecord(raw_tiff:rasterio.io.DatasetReader, filepath:str):
     filepath : str
         Path+filename to save the tfrecord as
     """
+    import rasterio
     try:
         raw_np = np.transpose(raw_tiff.read(), (1, 2, 0))
         #TODO: adjust if tiff structure changes
@@ -250,7 +251,7 @@ def save_tfrecord(raw_tiff:rasterio.io.DatasetReader, filepath:str):
         print(f'Unexpected Exception in toolbox.save_tfrecord: {e}')
 
 
-def save_tfrecord_alt(raw_tiff:rasterio.io.DatasetReader, filepath:str, downsample:int):
+def save_tfrecord_alt(raw_tiff, filepath:str, downsample:int):
     """Save tif file as tfrecord. Note that the tif structure is hardcoded and this function needs to be updated if it changes.
     This function is for Sentinel-2/Sentinel-2 tifs with 26 channels. Use `save_tfrecord()` for Sentinel-2/Sentinel-3 combination.
 
@@ -263,6 +264,10 @@ def save_tfrecord_alt(raw_tiff:rasterio.io.DatasetReader, filepath:str, downsamp
     downsample : int
         Factor by which to downsample the input image (function doesn't make sense without downsampling).
     """
+    import rasterio
+    from rasterio.enums import Resampling
+    from skimage.transform import resize
+    import tensorflow as tf
     try:
         #TODO: adjust if tiff structure changes
         raw_s2 = np.transpose(raw_tiff.read(), (1, 2, 0))[:,:,2:5]
