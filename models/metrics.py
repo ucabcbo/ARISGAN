@@ -37,17 +37,25 @@ class Metrics:
 
     def HPSI(self) -> float:
         import toolbox as tbx
-        result = hpsi_module.haar_psi(tbx.normalize_numpy(self.target), tbx.normalize_numpy(self.predict))
+        target = tbx.normalize_numpy(self.target) * 255
+        predict = tbx.normalize_numpy(self.predict) * 255
+        result = hpsi_module.haar_psi(target, predict)
         return result[0]
 
 
     def PSNR(self) -> float:
-        psnr = peak_signal_noise_ratio(self.target, self.predict, data_range=self.predict.max() - self.predict.min())
+        import toolbox as tbx
+        target = tbx.normalize_numpy(self.target) * 255
+        predict = tbx.normalize_numpy(self.predict) * 255
+        psnr = peak_signal_noise_ratio(target, predict, data_range=predict.max() - predict.min())
         return psnr
 
 
     def SSIM(self) -> float:
-        ssim = structural_similarity(self.target, self.predict, data_range=self.predict.max() - self.predict.min(), channel_axis=2)
+        import toolbox as tbx
+        target = tbx.normalize_numpy(self.target) * 255
+        predict = tbx.normalize_numpy(self.predict) * 255
+        ssim = structural_similarity(target, predict, data_range=predict.max() - predict.min(), channel_axis=2)
         return ssim
 
 
