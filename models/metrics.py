@@ -10,7 +10,16 @@ import models.haarPsi as hpsi_module
 
 class Metrics:
     
-    def __init__(self, target, predict) -> None:
+    def __init__(self, target:np.ndarray, predict:np.ndarray) -> None:
+        """Initialize with target (ground truth) and predicted image (not normalized)
+
+        Parameters
+        ----------
+        target : np.ndarray
+            Target image
+        predict : np.ndarray
+            Predicted image
+        """
         
         self.target = target
         self.predict = predict
@@ -29,6 +38,13 @@ class Metrics:
         
     
     def getall(self) -> dict:
+        """Evaluate all metrics and return dict of them
+
+        Returns
+        -------
+        dict
+            Dictionary of all metrics and their values
+        """
         result = dict()
         for key, function in self.metrics.items():
             result[key] = function()
