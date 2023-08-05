@@ -181,7 +181,7 @@ def experimental_dense_block(input_tensor, layers:int=4, kernel_size:int=3, filt
     return x
 
 
-# Based on SRS3
+# Based on DMNet
 def sis2_dense_multireceptive_field(input_tensor, kernel_sizes, filters):
 
     results = []
@@ -192,6 +192,38 @@ def sis2_dense_multireceptive_field(input_tensor, kernel_sizes, filters):
 
     x = tf.keras.layers.concatenate(results)
 
+    return x
+
+
+# Based on SRS3
+def sis2_dense_multireceptive_field_srs3(input_tensor, kernel_sizes, filters):
+
+    for_concat = []
+    prev_tensor = input_tensor
+    for kernel_size in kernel_sizes:
+        x1 = conv(kernel_size, filters, 1, batchnorm=False, lrelu=False)(prev_tensor)
+        x1 = relu()(x1)
+        for_concat.append(x1)
+        prev_tensor = x1
+
+    x = tf.keras.layers.concatenate(for_concat)
+
+    return x
+
+
+def awrrdb_block(input_tensor, tilesize, filters):
+
+    x = input_tensor
+    for i in range(3):
+        l1input = x
+        x = dense_block(x, filters=filters)
+        l1input = multiply_lambda(filters)(l1input)
+        x = multiply_lambda(filters)(x)
+        l1noise = tf.keras.layers.GaussianNoise(stddev=0.1, batch_input_shape=(None, tilesize, tilesize, 32))(x)
+        l1noise = multiply_lambda(filters)(l1noise)
+        x = tf.keras.layers.Add()([l1input, x, l1noise])
+    x = multiply_lambda(filters)(x)
+    x = tf.keras.layers.Add()([input_tensor, x])
     return x
 
 
