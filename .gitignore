@@ -10,6 +10,8 @@ model/
 vgg/ckpt/
 archive/
 _samples/
+_archive/
+_evaluation/
 *.out
 
 # snap-created directory on cpom:
