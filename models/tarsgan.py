@@ -46,7 +46,8 @@ class GAN:
                 l1noise = layers.multiply_lambda(32)(l1noise)
                 x = tf.keras.layers.Add()([l1input, x, l1noise])
             x = layers.multiply_lambda(32)(x)
-            x = tf.keras.layers.Add()([blockinput, x])
+            y = layers.multiply_lambda(32)(blockinput)
+            x = tf.keras.layers.Add()([y, x])
 
         # l1noise = layers.multiply_layer(32)([l1noise, l1noise])
         # x = tf.keras.layers.add([l1input, x, l1noise])

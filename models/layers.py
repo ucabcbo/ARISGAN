@@ -223,7 +223,8 @@ def awrrdb_block(input_tensor, tilesize, filters):
         l1noise = multiply_lambda(filters)(l1noise)
         x = tf.keras.layers.Add()([l1input, x, l1noise])
     x = multiply_lambda(filters)(x)
-    x = tf.keras.layers.Add()([input_tensor, x])
+    y = multiply_lambda(filters)(input_tensor)
+    x = tf.keras.layers.Add()([y, x])
     return x
 
 
