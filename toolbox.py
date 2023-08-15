@@ -299,7 +299,23 @@ def save_tfrecord_alt(raw_tiff, filepath:str, downsample:int):
         print(f'Unexpected Exception in toolbox.save_tfrecord_alt: {e}')
 
 
-def parse_tfrecord(tfrecord, tilesize):
+def parse_tfrecord(tfrecord, tilesize:int):
+    """Parse a single TFRecord into ground truth and real image
+    This method is for Sentinel-3 images as input images, use
+    `parse_tfrecord_alt` for Sentinel-2 files
+
+    Parameters
+    ----------
+    tfrecord : tf.data.TFRecordDataset
+        The TFRecord
+    tilesize : int
+        Tilesize
+
+    Returns
+    -------
+    Tuple[tf.Tensor,tf.Tensor]
+        GT and input images
+    """
     import tensorflow as tf
 
     record_description = {
@@ -307,12 +323,28 @@ def parse_tfrecord(tfrecord, tilesize):
         'raw_s3': tf.io.FixedLenFeature([tilesize, tilesize, 21], tf.float32),
     }
     sample = tf.io.parse_single_example(tfrecord, record_description)
-    raw_s2 = sample['raw_s2']
-    raw_s3 = sample['raw_s3']
-    return raw_s2, raw_s3
+    gt_image = sample['raw_s2']
+    input_image = sample['raw_s3']
+    return gt_image, input_image
 
 
 def parse_tfrecord_alt(tfrecord, tilesize):
+    """Parse a single TFRecord into ground truth and real image
+    This method is for downsampled Sentinel-2 images as input images, use
+    `parse_tfrecord` for Sentinel-3 files
+
+    Parameters
+    ----------
+    tfrecord : tf.data.TFRecordDataset
+        The TFRecord
+    tilesize : int
+        Tilesize
+
+    Returns
+    -------
+    Tuple[tf.Tensor,tf.Tensor]
+        GT and input images
+    """
     import tensorflow as tf
 
     record_description = {
@@ -320,12 +352,37 @@ def parse_tfrecord_alt(tfrecord, tilesize):
         'raw_s2_alt': tf.io.FixedLenFeature([tilesize, tilesize, 3], tf.float32),
     }
     sample = tf.io.parse_single_example(tfrecord, record_description)
-    raw_s2 = sample['raw_s2']
-    raw_s2_alt = sample['raw_s2_alt']
-    return raw_s2, raw_s2_alt
+    gt_image = sample['raw_s2']
+    input_image = sample['raw_s2_alt']
+    return gt_image, input_image
 
 
 def generate_images(model, example_input, example_target, num_images=5, showimg=True, ROOTPATH_IMGS=None, PATH_IMGS=None, model_name=None, iteration=None):
+    """Generate sample images of input image, ground truth, and generated image, side by side
+    Optionally save to file\n
+    This function is for Sentinel-3 as input images. For Sentinel-2 input images, use `generate_images_alt`
+
+    Parameters
+    ----------
+    model :
+        Must be callable and return a generated image
+    example_input :
+        List of input images, in batch size
+    example_target :
+        List of corresponding ground truth images
+    num_images : int, optional
+        Number of sample images to generate, by default 5
+    showimg : bool, optional
+        Should the result be displayed, by default True
+    ROOTPATH_IMGS : str, optional
+        Path where to store the resulting image, by default None
+    PATH_IMGS : str, optional
+        Second path where to store the resulting image, by default None
+    model_name : str, optional
+        Name of the model, used for output filename, by default None
+    iteration : int, optional
+        Number of the iteration, used for output filename, by default None
+    """
 
     import os
     from matplotlib import pyplot as plt
@@ -364,6 +421,31 @@ def generate_images(model, example_input, example_target, num_images=5, showimg=
     
 
 def generate_images_alt(model, example_input, example_target, num_images=5, showimg=True, ROOTPATH_IMGS=None, PATH_IMGS=None, model_name=None, iteration=None):
+    """Generate sample images of input image, ground truth, and generated image, side by side
+    Optionally save to file\n
+    This function is for Sentinel-2 as input images. For Sentinel-3 input images, use `generate_images`
+
+    Parameters
+    ----------
+    model :
+        Must be callable and return a generated image
+    example_input :
+        List of input images, in batch size
+    example_target :
+        List of corresponding ground truth images
+    num_images : int, optional
+        Number of sample images to generate, by default 5
+    showimg : bool, optional
+        Should the result be displayed, by default True
+    ROOTPATH_IMGS : str, optional
+        Path where to store the resulting image, by default None
+    PATH_IMGS : str, optional
+        Second path where to store the resulting image, by default None
+    model_name : str, optional
+        Name of the model, used for output filename, by default None
+    iteration : int, optional
+        Number of the iteration, used for output filename, by default None
+    """
 
     import os
     from matplotlib import pyplot as plt
@@ -402,6 +484,21 @@ def generate_images_alt(model, example_input, example_target, num_images=5, show
 
 
 def send_email(subject, body, sender_email:str='c49040@gmail.com', receiver_email:str='ucabcbo@ucl.ac.uk', password:str=None):
+    """Helper function to send emails through GMail - provide your password in `EMAIL_PASSWORD` environment variable.
+
+    Parameters
+    ----------
+    subject : str
+        Subject
+    body : str
+        Body
+    sender_email : str, optional
+        Sender address, by default 'c49040@gmail.com'
+    receiver_email : str, optional
+        Receiver address, by default 'ucabcbo@ucl.ac.uk'
+    password : str, optional
+        Password, by default None
+    """
     import os
     import smtplib
     from email.mime.text import MIMEText

@@ -3,8 +3,20 @@ import json
 import sys
 
 class Experiment:
+    """This class provides experiment information and settings, 
+    as specified in the `experiment.json` file in the
+    provided subdirectory of the experiment root directory.
+    A documentation of this file is provided at the end.
+    """
 
     class Output:
+        """Subclass to identify, create and provide access to output
+        directories for\n
+        logs: `LOGS`\n
+        checkpoints: `CKPT`\n
+        samples: `SAMPLES`\n
+        model information: `MODEL`
+        """
         def __init__(self, output_root:str, fullname:str, timestamp:str):
             self.LOGS = os.path.join(output_root, f'logs/{fullname}_{timestamp}/')
             self.CKPT = os.path.join(output_root, f'ckpt/{timestamp}')
@@ -115,3 +127,78 @@ class Experiment:
         self.EXPERIMENT_ROOT = environment['experiment_root']
 
         sys.path.append(self.PROJECT_ROOT)
+
+"""
+Structure of the `experiment.json` file:
+{
+    Model name, must be found as python module in `models` directory
+    "model_name": "sis2",
+
+    Dataset name, must be found as path in data root directory
+    "dataset": "cur_masked",
+
+    Tilesize
+    default: 256
+    "tilesize": 256,
+
+    Image height/width
+    default: same as tilesize
+    "img_height": 256,
+    "img_width": 256,
+
+    Numer of training steps
+    default: 40000
+    "steps": 40000,
+
+    Number of random sample images used for training/testing - null if entire dataset shall be used
+    default: null
+    "sample_train": 10000,
+    "sample_val": 1000,
+
+    Batch size
+    default: 16
+    "batch_size": 16,
+
+    Shuffle
+    default: true
+    "shuffle": true,
+
+    Random resize factor (float)
+    default: 1.11
+    "random_resize": 1.2,
+
+    Random rotate
+    default: true
+    "random_rotate": true,
+
+    Enforce that filenames include a certain suffix
+    default: null
+    "enfore_suffix": "notinmask",
+
+    Excelude files with a certain suffix in the filename
+    default: null
+    "exclude_suffix": "notinmask",
+
+    Dictionary of model-specific parameters
+    "params": {
+    },
+
+    Generator loss functions to use and their weights (see `losses.py`)
+    "gen_loss": {
+        "gen_gan": null,
+        "gen_nll": null,
+        "gen_ssim": 50,
+        "gen_l1": 50,
+        "gen_l2": null,
+        "gen_rmse": null,
+        "gen_wstein": 100
+    },
+
+    Discriminator loss functions to use and their weights (see `losses.py`)
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": null
+    }
+
+}
+"""

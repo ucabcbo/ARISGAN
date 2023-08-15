@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Batch schedule all relevant jobs on myriad, all with 8 hrs / 50G initial setting
+
 # ./sched.sh 8 50 s5lw_inmask/alt12/dmnet
 # ./sched_l.sh 8 50 s5lw_inmask/alt12/dsen2w
 # ./sched.sh 8 50 s5lw_inmask/alt12/pix2pix

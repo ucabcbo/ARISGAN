@@ -3,8 +3,16 @@ import json
 import sys
 
 class Environment:
+    """This class provides environment information and settings, common
+    across all experiments on this environment. It reads the `environment.json`
+    file in the project root directory. A documentation of this
+    file is provided at the end.
+    """
 
     def __init__(self):
+        """Initializes the instance and provides properties to
+        the environment-level settings
+        """
 
         # Read the configuration file
         possiblepaths = ['environment.json',
@@ -36,3 +44,33 @@ class Environment:
         sys.path.append(self.PROJECT_ROOT)
 
         print('environment loaded')
+
+"""
+Structure of the `environment.json` file:
+{
+    Environment name, especially for logs
+    "environment": "cpom",
+
+    Root, data, and experiment in/output directories
+    "project_root": "/home/cb/sis2/",
+    "data_root": "/home/cb/sis2/data/",
+    "experiment_root": "/home/cb/sis2/experiments/",
+
+    Data directory for original S2 and S3 files
+    "s2_root": "/cpnet/projects/sikuttiaq/pond_inlet/Sentinel_2/DATA/",
+    "s3_root": "/cpnet/projects/sikuttiaq/pond_inlet/Sentinel_3/OLCI/",
+
+    After each n-th step, a sample is created and saved to the samples subdirectory
+    default: 1000
+    "sample_freq": 1000,
+    
+    After each n-th step, a checkpoint is created
+    default: 5000
+    "ckpt_freq": 10000,
+
+    Maximum shuffle buffer size
+    default: 500
+    "max_shuffle_buffer": 500
+
+}
+"""

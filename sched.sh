@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Schedule single job on myriad
+
 # $1: duration
 # $2: memory
 # $3: experiment

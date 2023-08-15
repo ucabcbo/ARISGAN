@@ -1,3 +1,9 @@
+# This script reads the latest checkpoint of a given experiment, and performs evaluation of the metrics across
+# all images in the test dataset. Results are saved in the `_evaluation` subdirectory.
+# If no timestamp is specified, the overall latest run will be chosen. Otherwise the latest checkpoint within
+# the specified run.
+
+
 ### Arguments
 import argparse
 from datetime import datetime
@@ -76,6 +82,18 @@ print("Loaded checkpoint:", latest_checkpoint)
 
 
 def evaluate(test_ds:tf.data.Dataset) -> pd.DataFrame:
+    """Evaluation of metrics using the `Metrics` class. All images in the test set are looped through.
+
+    Parameters
+    ----------
+    test_ds : tf.data.Dataset
+        The test dataset
+
+    Returns
+    -------
+    pd.DataFrame
+        The resulting metrics as dataframe
+    """
 
     metric_results = pd.DataFrame()
 
@@ -92,7 +110,8 @@ def evaluate(test_ds:tf.data.Dataset) -> pd.DataFrame:
     
     return metric_results
 
-
+# Calling the evaluation on the test dataset
 eval_results = evaluate(test_dataset)
+
 os.makedirs(os.path.join(exp.EXPERIMENT_ROOT, '_evaluation'), exist_ok=True)
 eval_results.to_csv(os.path.join(exp.EXPERIMENT_ROOT, '_evaluation', f'{EXPERIMENT.replace("/", "_")}_{timestamp}.csv'), index_label='index')

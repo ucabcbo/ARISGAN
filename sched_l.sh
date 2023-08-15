@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Schedule single job on myriad - enforces 40G GPU (on L node)
+
 # $1: duration
 # $2: memory
 # $3: experiment

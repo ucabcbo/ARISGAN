@@ -1,5 +1,7 @@
 #!/bin/bash -l
 
+# Scheduled job script for myriad
+
 if [ -z "$1" ]; then
     echo "Error: Missing parameter. Please provide the required argument(s)."
     return 1
@@ -55,6 +57,3 @@ if [ -z "$2" ]; then
 else
     python /home/ucabcbo/sis2/train.py --exp $1 --restore $2 --timestamp $timestamp > $outputfile
 fi
-
-# archive all output files onto the shared scratch area
-# tar -zcvf $HOME/Scratch/workspace/files_from_job_$JOB_ID.tar.gz $TMPDIR

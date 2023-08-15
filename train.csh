@@ -1,3 +1,5 @@
+# Trigger train.py on blaze - convenience file
+
 if ($#argv == 0) then
     echo "Error: Missing parameter. Please provide the required argument(s)."
     exit 1
