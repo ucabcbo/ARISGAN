@@ -78,12 +78,6 @@ class Metrics:
 
 
     def sam_old(self) -> float:
-        """
-        :param x_true: 高光谱图像：格式：(H, W, C)
-        :param x_pred: 高光谱图像：格式：(H, W, C)
-        :return: 计算原始高光谱数据与重构高光谱数据的光谱角相似度
-        """
-
         sam_rad = np.zeros(self.predict.shape[0:2])
         for x in range(self.target.shape[0]):
             for y in range(self.target.shape[1]):
@@ -105,12 +99,6 @@ class Metrics:
 
 
     def SAM(self) -> float:
-        """
-        :param x_true: 高光谱图像：格式：(H, W, C)
-        :param x_pred: 高光谱图像：格式：(H, W, C)
-        :return: 计算原始高光谱数据与重构高光谱数据的光谱角相似度
-        """
-
         dot_sum = np.sum(self.target * self.predict, axis=2)
         norm_true = norm(self.target, axis=2)
         norm_pred = norm(self.predict, axis=2)
