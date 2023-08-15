@@ -1,7 +1,28 @@
 import tensorflow as tf
 
-
 def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, loss_object=None):
+    """Generator loss, as defined in `experiment.json`. The `gen_loss` dictionary specifies which
+    loss functions to include in which weight. `None` values will not be calculated. `0` values
+    will be calculated as scalar, but not included in the total loss.
+
+    Parameters
+    ----------
+    disc_generated_output : tf.Tensor
+        Discriminator output of the generated image
+    gen_output : tf.Tensor
+        Generated image
+    target : tf.Tensor
+        Target image
+    GEN_LOSS : dict
+        Loss dictionary from `experiment.json`
+    loss_object : optional
+        Loss object, by default None
+
+    Returns
+    -------
+    Tuple[float,dict]
+        Tuple of total loss as single value, and dictionary of all calculated values
+    """
 
     total_gen_loss = None
     gen_losses = dict()
@@ -54,6 +75,26 @@ def generator_loss(disc_generated_output, gen_output, target, GEN_LOSS:dict, los
 
 
 def discriminator_loss(disc_real_output, disc_generated_output, DISC_LOSS:dict, loss_object=None):
+    """Discriminator loss, as defined in `experiment.json`. The `dict_loss` dictionary specifies which
+    loss functions to include in which weight. `None` values will not be calculated. `0` values
+    will be calculated as scalar, but not included in the total loss.
+
+    Parameters
+    ----------
+    disc_real_output : tf.Tensor
+        Discriminator output of the real image
+    disc_generated_output : tf.Tensor
+        Discriminator output of the generated image
+    DISC_LOSS : dict
+        Loss dictionary from `experiment.json`
+    loss_object : optional
+        Loss object, by default None
+
+    Returns
+    -------
+    Tuple[float,dict]
+        Tuple of total loss as single value, and dictionary of all calculated values
+    """
 
     total_disc_loss = None
     disc_losses = dict()

@@ -1,6 +1,32 @@
+# This modules contains layers regularly used in various architectures, for ease of use
+
 import tensorflow as tf
+from typing import List
 
 def conv(kernel_size:int, filters:int, stride:int, batchnorm:bool, lrelu:bool, padding:str='same'):
+    """Conv2D layers, optionally with batch normalisation and/or leakyReLU
+    If any of these is added, packs everything in a `tf.keras.Sequential` layer
+
+    Parameters
+    ----------
+    kernel_size : int
+        Kernel size
+    filters : int
+        Number of filters
+    stride : int
+        Stride
+    batchnorm : bool
+        Batch normalisation yes/np
+    lrelu : bool
+        LeakyReLU yes/no
+    padding : str, optional
+        Padding, by default 'same'
+
+    Returns
+    -------
+    tf.Tensor
+        Output tensor
+    """    
     initializer = tf.random_normal_initializer(0., 0.02)
     x = tf.keras.layers.Conv2D(filters,
                                kernel_size,
@@ -21,6 +47,31 @@ def conv(kernel_size:int, filters:int, stride:int, batchnorm:bool, lrelu:bool, p
 
 
 def deconv(kernel_size:int, filters:int, stride:int, batchnorm:bool, relu:bool, dropout:float, activation:str=None):
+    """Conv2DTranspose layer, optionally with batch normalisation, ReLU and/or Dropout
+    If any of these is added, packs everything in a `tf.keras.Sequential` layer
+
+    Parameters
+    ----------
+    kernel_size : int
+        Kernel size
+    filters : int
+        Number of filters
+    stride : int
+        Stride
+    batchnorm : bool
+        Batch normalisation yes/no
+    relu : bool
+        ReLU yes/no
+    dropout : float
+        Droput yes/no
+    activation : str, optional
+        _description_, by default None
+
+    Returns
+    -------
+    tf.Tensor
+        Output tensor
+    """    
     initializer = tf.random_normal_initializer(0., 0.02)
     x = tf.keras.layers.Conv2DTranspose(filters,
                                         kernel_size,
@@ -44,51 +95,162 @@ def deconv(kernel_size:int, filters:int, stride:int, batchnorm:bool, relu:bool, 
 
 
 def lrelu():
+    """LeakyReLU layer
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.LeakyReLU()
     return result
 
 
 def sigmoid():
+    """Signmoid activation layer
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.Activation('sigmoid')
     return result
 
 
 def batchnorm():
+    """Batch normalisation layer
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.BatchNormalization()
     return result
 
 
 def dropout(rate:float):
+    """Dropout layer
+
+    Parameters
+    ----------
+    rate : float
+        Dropout rate - currently unused
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.Dropout(dropout)
     return result
 
 
 def relu(max_value=None):
+    """ReLU layer
+
+    Parameters
+    ----------
+    max_value : float, optional
+        Max value, by default None
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.ReLU(max_value=max_value)
     return result
 
 
 def prelu(alpha_initializer:float=0.25):
+    """PReLU layer (see class documentation)
+
+    Parameters
+    ----------
+    alpha_initializer : float, optional
+        Initial alpha, by default 0.25
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = PReLU(tf.keras.initializers.Constant(alpha_initializer))
     return result
 
 
 def pixelshuffler(scale_factor:float):
+    """Pixel Shuffler layer (see class documentation)
+
+    Parameters
+    ----------
+    scale_factor : float
+        Scale factor
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = PixelShuffler(scale_factor=scale_factor)
     return result
 
 
 def multiply_lambda(units:int):
+    """Multiplication with learnable lambda value
+
+    Parameters
+    ----------
+    units : int
+        Number of channels
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.Lambda(lambda x: x * tf.keras.backend.random_normal(shape=(1, 1, 1, units)))
     # result = MultiplyLayer(units=units)
     return result
 
+
 def multiply_layer(units):
+    """Tensor multiplication
+
+    Parameters
+    ----------
+    units : int
+        Not used - deprecated
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """    
     result = tf.keras.layers.Lambda(lambda x: tf.multiply(x[0], x[1]))
     return result
 
-# From SR-GAN
+
 def residual_block_srgan(kernel_size:int=3, filters:int=64, stride:int=1):
+    """Residual Block as defined in SR-GAN
+    Consists if two Conv2D with Batch normalisations, plus one PReLU layer
+
+    Parameters
+    ----------
+    kernel_size : int, optional
+        Kernel size, by default 3
+    filters : int, optional
+        Number of filters, by default 64
+    stride : int, optional
+        Stride, by default 1
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     initializer = tf.random_normal_initializer(0., 0.02)
     result = tf.keras.Sequential()
 
@@ -112,9 +274,24 @@ def residual_block_srgan(kernel_size:int=3, filters:int=64, stride:int=1):
     return result
 
 
-# From DSen2
-#TODO: kernel sizes and "scaling" not clear
-def residual_block_dsen2(kernel_size: int = 3, filters: int = 64, stride: int = 1):
+def residual_block_dsen2(kernel_size:int = 3, filters:int = 64, stride:int = 1):
+    """Residual block, as defined by DSen2-WGAN
+    Consists of three Conv2D layers, one LeakyReLU and one batch normalisation
+
+    Parameters
+    ----------
+    kernel_size : int, optional
+        Kernel size, by default 3
+    filters : int, optional
+        Number of filters, by default 64
+    stride : int, optional
+        Stride, by default 1
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     initializer = tf.random_normal_initializer(0., 0.02)
     result = tf.keras.Sequential()
     result.add(tf.keras.layers.Conv2D(filters,
@@ -140,9 +317,27 @@ def residual_block_dsen2(kernel_size: int = 3, filters: int = 64, stride: int = 
     return result
 
 
-# From TARSGAN
-def dense_block(input_tensor, layers:int=5, kernel_size:int=3, filters:int=32, stride:int=1):
+def dense_block(input_tensor:tf.Tensor, layers:int=5, kernel_size:int=3, filters:int=32, stride:int=1):
+    """Dense Block, as defined by TARSGAN (and others)
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    layers : int, optional
+        Number of layers, by default 5
+    kernel_size : int, optional
+        Kernel size, by default 3
+    filters : int, optional
+        Number of filters, by default 32
+    stride : int, optional
+        Stride, by default 1
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     x = input_tensor
     previous_xs = [input_tensor]
     for _ in range(max(layers-1, 1)):
@@ -157,8 +352,27 @@ def dense_block(input_tensor, layers:int=5, kernel_size:int=3, filters:int=32, s
     return x
 
 
-def experimental_dense_block(input_tensor, layers:int=4, kernel_size:int=3, filters:int=32, stride:int=2):
+def experimental_dense_block(input_tensor:tf.Tensor, layers:int=4, kernel_size:int=3, filters:int=32, stride:int=2):
+    """Experimental adjustment of the TARSGAN Dense Block, introducing strided and dilated convolution
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    layers : int, optional
+        Number of layers, by default 4
+    kernel_size : int, optional
+        Kernel size, by default 3
+    filters : int, optional
+        Number of filters, by default 32
+    stride : int, optional
+        Stride, by default 2
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     x = input_tensor
     previous_ups = [input_tensor]
     previous_downs = []
@@ -182,8 +396,25 @@ def experimental_dense_block(input_tensor, layers:int=4, kernel_size:int=3, filt
 
 
 # Based on DMNet
-def sis2_dense_multireceptive_field(input_tensor, kernel_sizes, filters):
+def sis2_dense_multireceptive_field_dmnet(input_tensor:tf.Tensor, kernel_sizes:List[int], filters:int):
+    """Multireceptive field as defined by DMNet (parallel).
+    For serial version, use `sis2_dense_multireceptive_field_srs3`.
+    The number of convolution layers is determined by the length of th provided list of kernel sizes.
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    kernel_sizes : List[int]
+        Kernel sizes as list of integers
+    filters : int
+        Number of filters
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     results = []
     for kernel_size in kernel_sizes:
         x1 = conv(kernel_size, filters, 1, batchnorm=False, lrelu=False)(input_tensor)
@@ -195,9 +426,25 @@ def sis2_dense_multireceptive_field(input_tensor, kernel_sizes, filters):
     return x
 
 
-# Based on SRS3
-def sis2_dense_multireceptive_field_srs3(input_tensor, kernel_sizes, filters):
+def sis2_dense_multireceptive_field_srs3(input_tensor:tf.Tensor, kernel_sizes:List[int], filters:int):
+    """Multireceptive field as defined by SRS3 (serial).
+    For parallel version, use `sis2_dense_multireceptive_field_dmnet`.
+    The number of convolution layers is determined by the length of th provided list of kernel sizes.
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    kernel_sizes : List[int]
+        Kernel sizes for each layer
+    filters : int
+        Number of filters
+
+    Returns
+    -------
+    tf.Tensor
+        Result tensor
+    """
     for_concat = []
     prev_tensor = input_tensor
     for kernel_size in kernel_sizes:
@@ -207,12 +454,26 @@ def sis2_dense_multireceptive_field_srs3(input_tensor, kernel_sizes, filters):
         prev_tensor = x1
 
     x = tf.keras.layers.concatenate(for_concat)
-
     return x
 
 
-def awrrdb_block(input_tensor, tilesize, filters):
+def awrrdb_block(input_tensor:tf.Tensor, tilesize:int, filters:int):
+    """Single AWRRDB Block, as defined by TARSGAN
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    tilesize : int
+        Tilesize of the tensor
+    filters : int
+        Number of filters
+
+    Returns
+    -------
+    int
+        Result tensor
+    """
     x = input_tensor
     for i in range(3):
         l1input = x
@@ -228,8 +489,25 @@ def awrrdb_block(input_tensor, tilesize, filters):
     return x
 
 
-def sis2_pix2pix(input_tensor, pxshape, output_channels, kernel_size:int=4):
+def sis2_pix2pix(input_tensor:tf.Tensor, pxshape:int, output_channels:int, kernel_size:int=4):
+    """Entire Pix2Pix network block, as defined by Isola et al.
 
+    Parameters
+    ----------
+    input_tensor : tf.Tensor
+        Input tensor
+    pxshape : int
+        Tilesize of the input data
+    output_channels : int
+        Number of output channels
+    kernel_size : int, optional
+        Kernel size, by default 4
+
+    Returns
+    -------
+    tf.Tensor
+        Output tensor
+    """
     x = input_tensor
 
     if pxshape >= 256:
@@ -283,8 +561,14 @@ def sis2_pix2pix(input_tensor, pxshape, output_channels, kernel_size:int=4):
     return x
 
 
-# From SR-GAN
 class PReLU(tf.keras.layers.Layer):
+    """PReLU class, as defined by SR-GAN
+
+    Parameters
+    ----------
+    tf : tensorflow
+        TensorFlow
+    """    
     def __init__(self, alpha_initializer, **kwargs):
         super(PReLU, self).__init__(**kwargs)
         self.alpha_initializer = tf.keras.initializers.get(alpha_initializer)
@@ -308,8 +592,14 @@ class PReLU(tf.keras.layers.Layer):
 
 from tensorflow.keras import backend as K
 
-#From SR-GAN
 class PixelShuffler(tf.keras.layers.Layer):
+    """PixelShuffler class, as defined by SR-GAN
+
+    Parameters
+    ----------
+    tf : tensorflow
+        TensorFlow
+    """
     def __init__(self, scale_factor, **kwargs):
         super(PixelShuffler, self).__init__(**kwargs)
         self.scale_factor = scale_factor
@@ -335,53 +625,3 @@ class PixelShuffler(tf.keras.layers.Layer):
         config.update({'scale_factor': self.scale_factor})
         return config
     
-# # From TARSGAN
-# class MultiplyLayer(tf.keras.layers.Layer):
-#     def __init__(self, units, **kwargs):
-#         super(MultiplyLayer, self).__init__(**kwargs)
-#         self.units = units
-
-#     def build(self, input_shape):
-#         self.kernel = self.add_weight(
-#             shape=(1, 1, 1, input_shape[-1]),
-#             initializer='glorot_uniform',
-#             trainable=True,
-#             name='kernel'
-#         )
-#         super(MultiplyLayer, self).build(input_shape)
-
-#     def call(self, inputs):
-#         return inputs * self.kernel
-
-#     def compute_output_shape(self, input_shape):
-#         return input_shape
-
-#     def get_config(self):
-#         config = super(MultiplyLayer, self).get_config()
-#         config.update({'units': self.units})
-#         return config
-    
-# class MultiplyLayer(tf.keras.layers.Layer):
-#     def __init__(self, units=1, **kwargs):
-#         super(MultiplyLayer, self).__init__(**kwargs)
-#         self.units = units
-
-#     def build(self, input_shape):
-#         self.kernel = self.add_weight(
-#             shape=(input_shape[-1], self.units),
-#             initializer='glorot_uniform',
-#             trainable=True,
-#             name='kernel'
-#         )
-#         super(MultiplyLayer, self).build(input_shape)
-
-#     def call(self, inputs):
-#         return inputs * self.kernel
-
-#     def compute_output_shape(self, input_shape):
-#         return input_shape
-
-#     def get_config(self):
-#         config = super(MultiplyLayer, self).get_config()
-#         config.update({'units': self.units})
-#         return config

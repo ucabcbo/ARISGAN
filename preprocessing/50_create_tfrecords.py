@@ -1,3 +1,11 @@
+# This script converts tif files into tfrecords, for easy consumption by tensorflow (and smaller file sizes).
+# It simply checks all tif files in the provided inventory subfolder. In its current setting, it automatically
+# created various datasets, some in which downsampled Sentinel-2 images are regarded as input data, and one in
+# which the Sentinel-3 image is the input data.
+# It randomly assigns files to the training vs. test dataset - creating the different datasets simultaneously
+# ensures the identical files are used for train/test across datasets.
+
+
 ### Arguments
 import argparse
 

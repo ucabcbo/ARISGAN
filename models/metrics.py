@@ -9,6 +9,8 @@ from skimage.metrics import peak_signal_noise_ratio
 import models.haarPsi as hpsi_module
 
 class Metrics:
+    """Metric calculation class
+    """
     
     def __init__(self, target:np.ndarray, predict:np.ndarray) -> None:
         """Initialize with target (ground truth) and predicted image (not normalized)
@@ -210,7 +212,7 @@ class Metrics:
         for i in range(d):
             summed += (self.RMSE2(self.target[:,:,i], self.predict[:,:,i]))**2 / np.mean(self.predict[:,:,i])**2
 
-        ergas = 100 * ratio *np.sqrt(summed/d)
+        ergas = 100 * ratio * np.sqrt(summed/d)
         return ergas
 
 

@@ -2,6 +2,7 @@
 # taken within a given time window of the respective Sentinel-2 file.
 
 # It reads and lists both .zip and .SEN3 files.
+# It attempts to unpack zip files, but is error tolerant if it can't (e.g. due to missing write permissions)
 # For .SEN3 files, it reads the file and calculates the overlap with the Sentinel-2 file.
 
 # It outputs the result in an inventory file in the _inventory subfolder of the data root directory.
@@ -70,11 +71,12 @@ for yearnum in range(2017, 2024):
 
             not_unpacked_zips = []
 
-            # Loop through S3 zip files to unzip the relevant ones
+            # Loop through S3 zip files to try to unzip the relevant ones
             for file_path_S3zip in file_paths_S3zip:
                 filename_S3zip = os.path.basename(file_path_S3zip)
                 acquisition_time_S3zip = datetime.strptime(filename_S3zip.split("_")[7][:15], "%Y%m%dT%H%M%S")
                 time_diff = abs(acquisition_time_S3zip - acquisition_time_S2)
+                # Relevant are the S3 files within the given time window
                 if time_diff < timedelta(hours=MAX_TIMEDIFF):
                     if not file_path_S3zip[:-4] in file_paths_S3:
                         try:
@@ -103,14 +105,17 @@ for yearnum in range(2017, 2024):
                 filename_S3 = os.path.basename(file_path_S3)
                 extension_S3 = os.path.splitext(file_path_S3)[1]
                 acquisition_time_S3 = datetime.strptime(filename_S3.split("_")[7][:15], "%Y%m%dT%H%M%S")
+                # Only consider those S3 files within the given time window
                 time_diff = abs(acquisition_time_S3 - acquisition_time_S2)
                 if time_diff < timedelta(hours=MAX_TIMEDIFF):
                     overlap = None
+                    # Only include SEN3 files
                     if extension_S3 == '.SEN3':
                         if s2_raw is None:
                             s2_raw = stbx.read_product(file_path_S2)
                         s3_raw = stbx.read_product(file_path_S3)
                         #TODO: check why S3 is sometimes None
+                        # Determine the overlap with the S2 file
                         if s3_raw is not None:
                             overlap = stbx.check_overlap(s2_raw, s3_raw, 'metadata.s2', 'metadata.s3')
                             s3_raw.dispose()

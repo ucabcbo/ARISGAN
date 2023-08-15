@@ -30,7 +30,7 @@ class GAN:
 
         x = inputs                                                          # 256,256,21
 
-        x = layers.sis2_dense_multireceptive_field(x, kernel_sizes=[3, 5, 9, 13], filters=64)
+        x = layers.sis2_dense_multireceptive_field_dmnet(x, kernel_sizes=[3, 5, 9, 13], filters=64)
         concat_x = x
 
         x = layers.sis2_pix2pix(x, self.exp.TILESIZE, 64, kernel_size=3)

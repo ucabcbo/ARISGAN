@@ -1,8 +1,14 @@
+# For each valid S2 file which was included in the inventory generated in the earlier steps,
+# this script creates a downscaled png image version, to enable an easy manual review.
+# The purpose is that the user can judge, which S2 files should be further considered.
+# E.g., cloudy pictures can be excluded.
+
+
 ### Arguments
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--inventory", required=True, help='Inventory code (without .csv extension)')
+parser.add_argument("--inventory", required=True, help='Inventory code (without .csv extension), e.g. inv_T17ABC_10')
 parser.add_argument("--overlap", required=False, default=0.5, type=float, help='Minimum overlap to consider S2/S3 match')
 parser.add_argument("--downsample", required=False, default=20, type=int, help='Downsample pngs for smaller file size (to every nth pixel)')
 

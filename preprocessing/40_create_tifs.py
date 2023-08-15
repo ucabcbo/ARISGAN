@@ -1,3 +1,19 @@
+# This script creates tif tiles from the S2/S3 image pairs selected in the previous (manual) step
+# It performs the task end-to-end by selecting the correct bands (B2-B4 from Sentinel-2, all 21 OLCI bands for Sentinel-3),
+# collocating the images, thereby upsampling Sentinel-3 by nearest neighbour upsampling, cropping
+# random tiles from the result, and saving them as tif.
+
+# The resulting tif files have 26 channels: 0 and 1 are quality bands, 2-4 are the Sentinel-2 bands, the rest Sentinel-3 bands.
+
+# Masks can be specified. Masks need to be stored as kml files (one polygon per file) in the data/_masks directory. Tif files are
+# created regardless, but the ones outside the mask get the suffix "notinmask".
+
+# The script also filters out those tiles that are out of the visible Sentinel-2/Sentinel-3 bounds, i.e. do not have an overlap
+# with the geographic extent. The Sentinel metadata are used for this check.
+
+# A plot displaying the overlay, including the mask(s), is saved as a png file.
+
+
 ### Arguments
 import argparse
 
