@@ -1,0 +1,34 @@
+{
+    "model_name": "sis2",
+    "dataset": "cur_masked",
+    "tilesize": 256,
+    "steps": 40000,
+    "sample_train": null,
+    "sample_val": null,
+
+    "batch_size": 16,
+    "shuffle": true,
+    "random_resize": 1.2,
+    "random_rotate": true,
+    "enforce_suffix": "notinmask",
+    "exclude_suffix": null,
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gen_gan": 0,
+        "gen_nll": 0,
+        "gen_ssim": 50,
+        "gen_l1": 100,
+        "gen_l2": 0,
+        "gen_rmse": 0,
+        "gen_wstein": 100
+    },
+
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": null
+    }
+
+}
