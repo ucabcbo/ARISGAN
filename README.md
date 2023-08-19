@@ -246,3 +246,134 @@ class GAN:
 
 ## Experiment setup
 
+Experiments get set up in the experiments root directory as json files. Create a meaningful subdirectory structure (no limitations) and store one
+`experiment.json` file per leaf directory. An example subdirectory structure could be:
+
+- model
+  - lossfunction
+    - dataset
+
+The choice really depends on the best structure to keep an overview on models and their results. All output files will be stored in this directory.
+
+The JSON contains all information needed to select model and dataset, various pre-processing parameters, loss functions etc. It also allows
+using model-specific parameters. All dictionary entries of the `params` node get exposed to the model and thus can be used for model logic.
+
+```json
+{
+    Model name, must be found as python module in `models` directory
+    "model_name": "sis2",
+
+    Dataset name, must be found as path in data root directory
+    "dataset": "cur_masked",
+
+    Tilesize (default: 256)
+    "tilesize": 256,
+
+    Image height/width (default: same as tilesize)
+    "img_height": 256,
+    "img_width": 256,
+
+    Numer of training steps
+    default: 40000
+    "steps": 40000,
+
+    Number of random sample images used for training/testing - null if the entire dataset shall be used (default: null)
+    "sample_train": 10000,
+    "sample_val": 1000,
+
+    Batch size (default: 16)
+    "batch_size": 16,
+
+    Shuffle as bool (default: true)
+    "shuffle": true,
+
+    Random resize factor as float (default: 1.11)
+    "random_resize": 1.2,
+
+    Random rotate as bool (default: true)
+    "random_rotate": true,
+
+    Enforce that data filenames include a certain suffix (default: null)
+    "enfore_suffix": "notinmask",
+
+    Excelude data files with a certain suffix in the filename (default: null)
+    "exclude_suffix": "notinmask",
+
+    Dictionary of model-specific parameters
+    "params": {
+    },
+
+    Generator loss functions to use and their weights (see `losses.py`)
+    "gen_loss": {
+        "gen_gan": null,
+        "gen_nll": null,
+        "gen_ssim": 50,
+        "gen_l1": 50,
+        "gen_l2": null,
+        "gen_rmse": null,
+        "gen_wstein": 100
+    },
+
+    Discriminator loss functions to use and their weights (see `losses.py`)
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": null
+    }
+
+}
+```
+
+# Training
+
+To start training, simply run the `train.py` script.
+
+The script takes the following parameters:
+
+- `exp`: Link to the experiment subdirectory, e.g. `sis2/s3/l1loss`
+- `timestamp` (optional, default: current time): Start timestamp to apply; for log purposes - supported format: `MMDD-hhmm`
+- `restore` (optional, default: none): Timestamp of a checkpoint to restore and continue training
+
+Training will run for as many steps as specified in the experiment. It will create the following subdirectories in the experiment directory:
+
+#### `ckpt`
+
+Checkpoint files. Checkpoints will be created every `n` steps, as specified in the `environment.json`.
+
+Old checkpoint files will not be deleted - watch the size here manually.
+
+A separate subdirectory will be created per `timestamp`, also when the training is continued.
+
+#### `logs`
+
+Log files, both Tensorflow logs, as well as an `experiment.json` output to verify parameters have been read correctly.
+
+A separate subdirectory will be created per `timestamp`, also when the training is continued.
+
+#### `model`
+
+Graphical outputs of the generator and discriminator architecture.
+
+#### `nohup`
+
+Recommended subdirectory to store shell-level output files.
+
+#### `samples`
+
+A sample test image will be created every `n` steps, as specified in the `environment.json`. Those will be stored here.
+
+In addition, the most current sample will be stored in the `_samples` subdirectory in the experiment root directory, for more convenient access.
+
+# Evaluation
+
+Evaluation will be performed automatically once training is complete. It can also be triggered manually by calling `evaluate.py`.
+
+The script takes the following parameters:
+
+- `exp`: Link to the experiment subdirectory, e.g. `sis2/s3/l1loss`
+- `timestamp` (optional, default: latest experiment): Timestamp of an explicit experiment to restore
+
+The script will evaluate the test dataset as specified in the respective `experiment.json` across all metrics implemented in `models.Metrics`.
+It stores its results in the `_evaluation' subdirectory of the experiment root directory.
+
+Results are stored on a per-sample csv file (according to the specified batch size).
+`summary_eval.ipynb` shows some options to summarise and compare the evaluation results.
