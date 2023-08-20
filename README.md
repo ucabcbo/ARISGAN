@@ -11,7 +11,7 @@ The intention of the model is a realistic image that could be the ground truth. 
 resolution difference.
 
 Sample results:
-![image](https://github.com/ucabcbo/ARISGAN/assets/115581327/e44be4c0-a635-4a0b-9e5c-fc242075ec0a)
+![image](https://github.com/ucabcbo/ARISGAN/blob/main/sample.png)
 
 # Setup
 
