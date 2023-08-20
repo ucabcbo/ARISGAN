@@ -19,7 +19,25 @@ Sample results:
 
 ### Environment
 
-Adjust `environment.json` to your specific environment: name, and reference to directory structures
+Create a `environment.json` file in the project root folder and adjust it to your specific environment:
+
+```json
+{
+    "environment": "cpom", # Environment name, for reference and logs
+    "project_root": "/absolute/path/to/localrepo/",
+    "data_root": "/absolute/path/to/data/",
+    "experiment_root": "/absolute/path/to/experiments/",
+
+    "s2_root": "/cpnet/projects/sikuttiaq/pond_inlet/Sentinel_2/DATA/", # Location of Sentinel-2 root data (if preprocessing is required)
+    "s3_root": "/cpnet/projects/sikuttiaq/pond_inlet/Sentinel_3/OLCI/", # Location of Sentinel-2 root data (if preprocessing is required)
+
+    "sample_freq": 1000, # every n-th training step, samples will be created
+    "ckpt_freq": 10000, # every n-th training step, a checkpoint will be saved
+
+    "max_shuffle_buffer": 500  # shuffle buffer size, depending on available memory
+
+}
+```
 
 ### Folder structure
 
@@ -28,7 +46,7 @@ Next to this repository, a directory for data and a directory for experiments ar
 #### Data
 
 The data directory can be created anywhere in your file system. The following subdirectories are required (partially will be created
-automatically:
+automatically):
 
 - `_inventory`: This directory will contain all interim files produced during pre-processing, enabling tracing the steps performed, as well as performing a manual review and selection of images to be taken up into a dataset
 - `_masks`: If masks shall be applied, they are to be stored here in kml format
