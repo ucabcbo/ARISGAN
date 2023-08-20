@@ -55,8 +55,8 @@ automatically):
 
 #### Experiments
 
-The experiments directory can be created anywhere in your file system. It is up to the user to create a multi-level folder structure underneath to organize
-experiments. Each leaf directory can contain one `experiment.json' file, which describes the experiment to be conducted. During training, further directories
+The experiments directory can be created anywhere in your file system. It is up to the user to create a multi-level directory structure underneath to organize
+experiments. Each leaf directory can contain one `experiment.json` file, which describes the experiment to be conducted. During training, further directories
 will automatically be created at this location.
 
 Further directories in the experiment root directory are:
