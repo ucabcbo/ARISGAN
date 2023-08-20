@@ -71,10 +71,11 @@ However, the code to read Sentinel-2 and -3 files is proprietary to the director
 a flat directory for Sentinel-2, and a YYYY/MM subdirectory structure for Sentinel-3.
 
 Data Preparation is performed in the following five steps. All files are located in the `preprocessing` directory. For all but step 50, the `snappy` module
-is required. For step 50, `TensorFlow` is required instead.
+is required. For step 50, `Tensorflow` is required instead.
 
 See https://senbox.atlassian.net/wiki/spaces/SNAP/pages/24051781/Using+SNAP+in+your+Python+programs
-for `snappy` installation (this seems to be much easier from SNAP 10 onward than it was up to SNAP 9).
+for `snappy` installation (this seems to be much easier from SNAP 10 onward than it was up to SNAP 9 -
+for SNAP 9, use Python 3.6 so that the installer provided by ESA can setup `snappy` automatically).
 
 #### `10_identify_unique_tilecodes.ipynb`
 
