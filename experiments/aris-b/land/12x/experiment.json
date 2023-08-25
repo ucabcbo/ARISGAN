@@ -1,0 +1,32 @@
+{
+    "model_name": "aris-b",
+    "dataset": "alt12",
+    "tilesize": 256,
+    "batch_size": 16,
+    "shuffle": true,
+    "steps": 100000,
+
+    "random_resize": 1.0,
+    "random_rotate": true,
+    "enforce_suffix": "notinmask",
+
+    "params": {
+    },
+
+    "gen_loss": {
+        "gen_gan": 0,
+        "gen_nll": 0,
+        "gen_ssim": 100,
+        "gen_l1": 50,
+        "gen_l2": 0,
+        "gen_rmse": 0,
+        "gen_wstein": 100
+    },
+
+    "disc_loss": {
+        "disc_bce": 1,
+        "disc_nll": 0
+    }
+
+}
+

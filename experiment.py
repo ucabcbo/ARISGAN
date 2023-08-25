@@ -132,7 +132,7 @@ class Experiment:
 Structure of the `experiment.json` file:
 {
     Model name, must be found as python module in `models` directory
-    "model_name": "sis2",
+    "model_name": "aris-a",
 
     Dataset name, must be found as path in data root directory
     "dataset": "cur_masked",
